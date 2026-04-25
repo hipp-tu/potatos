@@ -1,2 +1,2 @@
 # my_pages
-creat for my cloudfare site
+for my github pages
