@@ -16,7 +16,7 @@
             min-height: 100%;
             background-color: #000;
         }
-        /* 背景图固定，不随滚动而滚动 */
+        /* 使用专门的404背景图 */
         .background-cover {
             position: fixed;
             top: 0;
@@ -38,14 +38,14 @@
             display: flex;
             flex-direction: column;
         }
-        /* 顶栏样式 - 固定 + 毛玻璃 + 高z-index，不会被内容覆盖 */
+        /* 顶栏样式 - 固定 + 毛玻璃 + 高z-index */
         .top-bar {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 70px;
-            background-color: rgba(136, 136, 136, 0.4);
+            background-color: rgba(136, 136, 136, 0.35);
             backdrop-filter: blur(12px);
             z-index: 100;
             display: flex;
@@ -93,6 +93,7 @@
             opacity: 0.7;
             text-decoration: underline;
         }
+        /* 搜索框样式 */
         .search-box {
             display: flex;
             align-items: center;
@@ -130,6 +131,7 @@
         .search-icon svg path {
             stroke: rgba(255, 255, 255, 0.8);
         }
+        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -183,7 +185,7 @@
             display: block;
         }
         .dropdown-content a {
-            color: #2c2c2c;
+            color: #4a4a4a;
             padding: 10px 16px;
             text-decoration: none;
             display: block;
@@ -191,10 +193,10 @@
             transition: background-color 0.2s ease;
         }
         .dropdown-content a:hover {
-            background-color: rgba(0, 0, 0, 0.08);
+            background-color: rgba(0, 0, 0, 0.05);
         }
         .dropdown-content .placeholder-item {
-            color: #2c2c2c;
+            color: #4a4a4a;
             padding: 10px 16px;
             display: block;
             font-size: 14px;
@@ -211,7 +213,7 @@
             vertical-align: middle;
         }
 
-        /* 404 核心样式 - 给顶部留出空间，避免被顶栏遮挡 */
+        /* 404 核心样式 */
         .error-container {
             flex: 1;
             display: flex;
@@ -322,19 +324,20 @@
 <body>
 <div class="background-cover"></div>
 <div class="content-wrapper">
-    <!-- 顶栏 fixed + backdrop-filter blur 高优先级，滚动不会被内容覆盖 -->
+    <!-- 顶栏 -->
     <div class="top-bar">
         <div class="left-section" onclick="location.href='index.html';">
-            <img class="logo" src="resource/logo.png" alt="Potatos logo">
+            <img class="logo" src="resource/logo.png" alt="logo">
             <span class="brand-name">Potatos</span>
         </div>
         <div class="right-section">
-            <a class="nav-link" href="about.html" target="_self">关于本站</a>
+            <a class="nav-link" href="blogs.html">博客记录</a>
+            <a class="nav-link" href="about.html">关于本站</a>
             <div class="dropdown" id="errorDropdown">
                 <div class="dropdown-control">
                     <button class="dropbtn" id="errorDropBtn">项目</button>
                     <span class="dropdown-icon" id="errorDropIcon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M15 18L9 12L15 6" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </span>
@@ -345,18 +348,19 @@
                     <div class="placeholder-item">空</div>
                 </div>
             </div>
-            <div class="search-box">
-                <span class="search-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255, 255, 255, 0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- 搜索框 -->
+            <div class="search-box" id="errorSearchBox">
+                <span class="search-icon" id="errorSearchIcon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
                     </svg>
                 </span>
-                <input type="text" class="search-input" placeholder="搜索...">
+                <input type="text" id="errorKeywordInput" class="search-input" placeholder="搜索...">
             </div>
         </div>
     </div>
 
-    <!-- 404 内容区，margin-top 确保不被顶栏遮挡 -->
+    <!-- 404 内容区 -->
     <div class="error-container">
         <div class="error-card">
             <div class="potato-mascot">🥔💔</div>
@@ -375,7 +379,7 @@
                 返回 Potatos 主页
             </a>
             <div class="suggestion-box">
-                💡 试试返回首页，或通过顶栏「关于本站」「项目」逛一逛～ <br>
+                💡 试试返回首页，或通过顶栏「博客记录」「关于本站」「项目」逛一逛～<br>
                 如果你觉得这是不该出现的错误，欢迎联系土匪potato。
             </div>
         </div>
@@ -383,6 +387,7 @@
 </div>
 
 <script>
+    // 下拉菜单脚本
     (function() {
         const container = document.getElementById('errorDropdown');
         const menu = document.getElementById('errorDropMenu');
@@ -399,6 +404,48 @@
             if (!container.contains(e.target)) closeDrop();
         });
         menu.classList.remove('show');
+    })();
+
+    // 搜索框跳转逻辑
+    (function() {
+        const searchInput = document.getElementById('errorKeywordInput');
+        const searchIcon = document.getElementById('errorSearchIcon');
+        const searchBox = document.getElementById('errorSearchBox');
+        
+        function performSearchAndRedirect() {
+            let keyword = searchInput ? searchInput.value.trim() : '';
+            if (keyword === '') {
+                window.open('search.html?q=', '_blank');
+            } else {
+                const encoded = encodeURIComponent(keyword);
+                window.open(`search.html?q=${encoded}`, '_blank');
+            }
+        }
+        
+        if (searchIcon) {
+            searchIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                performSearchAndRedirect();
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    performSearchAndRedirect();
+                }
+            });
+        }
+        
+        if (searchBox && searchInput) {
+            searchBox.addEventListener('click', function(e) {
+                if (e.target === searchBox || e.target.classList.contains('search-box')) {
+                    searchInput.focus();
+                }
+            });
+        }
     })();
 </script>
 </body>
