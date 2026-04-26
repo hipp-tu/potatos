@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>搜索 | Potatos. - 土匪potato的赛博实验室</title>
+    <link rel="icon" type="image/png" href="resource/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #0a0c12;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .bg-cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('resource/background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            z-index: 0;
+        }
+        .search-center {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 24px;
+            padding: 40px 0;
+        }
+        .brand-block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            cursor: pointer;
+            margin-bottom: 40px;
+        }
+        .logo-img {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+        .brand-title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #FFE6B0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .search-container {
+            background: rgba(20, 24, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 70px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            margin-bottom: 20px;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+            padding: 8px 8px 8px 24px;
+            gap: 12px;
+        }
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 1.2rem;
+            color: #FFFFFF;
+            padding: 14px 0;
+        }
+        .search-input::placeholder {
+            color: rgba(230, 240, 255, 0.6);
+        }
+        .search-submit {
+            background: linear-gradient(135deg, #FFD966, #F4B942);
+            border: none;
+            border-radius: 60px;
+            padding: 10px 26px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .clear-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 40px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+        }
+        .status-area {
+            text-align: center;
+            padding: 20px;
+            color: #FFE6B0;
+            background: rgba(0,0,0,0.4);
+            border-radius: 40px;
+            margin-top: 20px;
+        }
+        .status-area.error {
+            color: #FF8888;
+        }
+        .results-area {
+            background: rgba(12, 16, 28, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .results-header {
+            padding: 18px 24px;
+            color: #FFE6B0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: 500;
+        }
+        .results-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .result-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .result-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .result-type {
+            display: inline-block;
+            background: rgba(255, 200, 100, 0.25);
+            border-radius: 20px;
+            padding: 2px 12px;
+            font-size: 0.7rem;
+            color: #FFE0A0;
+            margin-bottom: 8px;
+        }
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #F5E9CF;
+            margin-bottom: 6px;
+        }
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+        }
+        .tag {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            color: #DDD;
+        }
+        .result-preview {
+            font-size: 0.85rem;
+            color: #C7D0EB;
+            line-height: 1.4;
+        }
+        .no-result {
+            padding: 40px;
+            text-align: center;
+            color: #b9c3dd;
+        }
+        mark {
+            background: #FFD96660;
+            color: #fff;
+            padding: 0 2px;
+            border-radius: 4px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #FFE6B0;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 550px) {
+            .brand-title { font-size: 1.6rem; }
+            .search-input { font-size: 1rem; }
+            .search-form { padding: 6px 8px 6px 18px; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-cover"></div>
+<div class="search-center">
+    <div class="brand-block" onclick="location.href='index.html';">
+        <img class="logo-img" src="resource/logo.png" alt="Potatos">
+        <span class="brand-title">Potatos. 搜索</span>
+    </div>
+    <div class="search-container">
+        <div class="search-form">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索博客内容 (类型、标签、标题、正文)..." autocomplete="off">
+            <button id="clearBtn" class="clear-btn">✕</button>
+            <button id="searchBtn" class="search-submit">检索</button>
+        </div>
+    </div>
+    
+    <!-- 状态显示区域 -->
+    <div id="statusArea" class="status-area">📡 正在加载 resource/blogs.json ...</div>
+    
+    <div id="resultsArea" class="results-area" style="display: none;">
+        <div class="results-header">✨ 搜索结果</div>
+        <div id="resultsList" class="results-list"></div>
+    </div>
+</div>
+
+<script>
+    // 全局数据
+    let blogsData = [];
+    let isLoading = false;
+    let dataLoaded = false;
+
+    // 从 resource/blogs.json 加载数据
+    async function loadBlogsData() {
+        if (dataLoaded && blogsData.length > 0) {
+            return blogsData;
+        }
+        if (isLoading) {
+            // 等待加载完成
+            return new Promise(resolve => {
+                const checkInterval = setInterval(() => {
+                    if (!isLoading) {
+                        clearInterval(checkInterval);
+                        resolve(blogsData);
+                    }
+                }, 100);
+            });
+        }
+        
+        isLoading = true;
+        const statusDiv = document.getElementById('statusArea');
+        if (statusDiv) {
+            statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载 resource/blogs.json ...';
+            statusDiv.className = 'status-area';
+        }
+        
+        try {
+            // 关键：从 resource 目录加载 blogs.json 文件
+            const response = await fetch('resource/blogs.json?t=' + Date.now());
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                blogsData = data;
+                dataLoaded = true;
+                console.log(`成功从 resource/blogs.json 加载 ${blogsData.length} 条博客数据`);
+                if (statusDiv) {
+                    statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇文章，可以开始搜索`;
+                    setTimeout(() => {
+                        if (statusDiv) statusDiv.style.display = 'none';
+                    }, 2000);
+                }
+            } else {
+                throw new Error('数据格式错误：期望数组');
+            }
+        } catch (err) {
+            console.error('加载 resource/blogs.json 失败:', err);
+            if (statusDiv) {
+                statusDiv.innerHTML = `❌ 加载失败: ${err.message}<br>请确保 resource/blogs.json 文件存在`;
+                statusDiv.className = 'status-area error';
+            }
+            blogsData = [];
+        } finally {
+            isLoading = false;
+        }
+        return blogsData;
+    }
+
+    // 从正文中提取纯文本（去除HTML标签）
+    function stripHtml(html) {
+        if (!html) return '';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+    }
+
+    // 搜索核心逻辑
+    function searchBlogs(keyword) {
+        if (!keyword || keyword.trim() === "") return [];
+        if (!blogsData.length) return [];
+        
+        const lowerKw = keyword.toLowerCase().trim();
+        const words = lowerKw.split(/\s+/).filter(w => w.length > 0);
+        if (words.length === 0) return [];
+
+        const results = [];
+        for (const item of blogsData) {
+            let relevance = 0;
+            const typeLow = (item.type || "").toLowerCase();
+            const titleLow = (item.title || "").toLowerCase();
+            const bodyPlain = stripHtml(item.body || "").toLowerCase();
+            const tagsLow = (item.tags || []).map(t => t.toLowerCase()).join(" ");
+            const summaryLow = (item.summary || "").toLowerCase();
+
+            for (const w of words) {
+                if (titleLow.includes(w)) relevance += 15;
+                if (typeLow.includes(w)) relevance += 10;
+                if (tagsLow.includes(w)) relevance += 12;
+                if (bodyPlain.includes(w)) relevance += 6;
+                if (summaryLow.includes(w)) relevance += 5;
+                if (titleLow === w) relevance += 20;
+            }
+            if (relevance > 0) {
+                results.push({ ...item, relevance });
+            }
+        }
+        results.sort((a, b) => b.relevance - a.relevance);
+        return results;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function highlightText(text, keyword) {
+        if (!keyword || !text) return escapeHtml(text);
+        const words = keyword.trim().split(/\s+/).filter(w => w.length > 0);
+        let result = escapeHtml(text);
+        for (let w of words) {
+            const regex = new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            result = result.replace(regex, `<mark>$1</mark>`);
+        }
+        return result;
+    }
+
+    // 显示完整内容模态框
+    function showFullContent(blog) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+        
+        const card = document.createElement('div');
+        card.style.cssText = 'max-width:800px; width:100%; max-height:85vh; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:auto; padding:28px; color:#f0f3fa;';
+        
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,150,0.3); padding-bottom:12px;">
+                <h2 style="color:#FFE6B0; margin:0;">${escapeHtml(blog.title)}</h2>
+                <button id="closeModalBtn" style="background:rgba(255,255,255,0.2); border:none; font-size:1.5rem; cursor:pointer; color:#fff; border-radius:40px; width:40px; height:40px;">✕</button>
+            </div>
+            <div style="margin-bottom:12px;">
+                <span style="background:#FFD96630; padding:4px 12px; border-radius:40px;">📁 ${escapeHtml(blog.type)}</span>
+            </div>
+            <div style="margin-bottom:20px; display:flex; gap:8px; flex-wrap:wrap;">
+                ${(blog.tags || []).map(t => `<span style="background:rgba(255,215,0,0.2); padding:2px 12px; border-radius:20px; font-size:0.75rem;">#${escapeHtml(t)}</span>`).join('')}
+            </div>
+            <div style="line-height:1.6; font-size:1rem;">${blog.body || '暂无正文内容'}</div>
+        `;
+        
+        modal.appendChild(card);
+        document.body.appendChild(modal);
+        
+        const closeBtn = document.getElementById('closeModalBtn');
+        if (closeBtn) closeBtn.onclick = () => modal.remove();
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    }
+
+    // 渲染搜索结果
+    async function renderResults(keyword) {
+        const resultsList = document.getElementById('resultsList');
+        const resultsArea = document.getElementById('resultsArea');
+        const statusDiv = document.getElementById('statusArea');
+        
+        if (!resultsList) return;
+
+        // 确保数据已加载
+        if (!dataLoaded && blogsData.length === 0) {
+            await loadBlogsData();
+        }
+        
+        if (!blogsData.length) {
+            if (statusDiv) {
+                statusDiv.innerHTML = '❌ 无法加载博客数据，请检查 resource/blogs.json 文件是否存在';
+                statusDiv.className = 'status-area error';
+            }
+            resultsList.innerHTML = '<div class="no-result">🥔 无法加载数据，请刷新页面重试</div>';
+            resultsArea.style.display = 'block';
+            return;
+        }
+        
+        // 隐藏状态区域（数据加载成功）
+        if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) {
+            statusDiv.style.display = 'none';
+        }
+        
+        if (!keyword || keyword.trim() === "") {
+            resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索博客内容</div>';
+            resultsArea.style.display = 'block';
+            return;
+        }
+
+        const results = searchBlogs(keyword);
+        if (results.length === 0) {
+            resultsList.innerHTML = `<div class="no-result">🥔 没有找到关于 “${escapeHtml(keyword)}” 的内容<br>试试其他关键词如：C++、DeepSeek、Blender、测试</div>`;
+            resultsArea.style.display = 'block';
+            return;
+        }
+
+        let html = '';
+        for (let i = 0; i < results.length; i++) {
+            const item = results[i];
+            const previewText = item.summary || stripHtml(item.body || '').substring(0, 120);
+            html += `
+                <div class="result-item" data-index="${i}">
+                    <div class="result-type">📁 ${highlightText(item.type, keyword)}</div>
+                    <div class="result-title">${highlightText(item.title, keyword)}</div>
+                    <div class="result-tags">
+                        ${(item.tags || []).map(tag => `<span class="tag">${highlightText(tag, keyword)}</span>`).join('')}
+                    </div>
+                    <div class="result-preview">${highlightText(previewText, keyword)}${previewText.length >= 120 ? '...' : ''}</div>
+                </div>
+            `;
+        }
+        resultsList.innerHTML = html;
+        resultsArea.style.display = 'block';
+
+        // 绑定点击事件
+        document.querySelectorAll('.result-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.getAttribute('data-index'));
+                if (!isNaN(idx) && results[idx]) {
+                    showFullContent(results[idx]);
+                }
+            });
+        });
+    }
+
+    // 执行搜索（带URL更新）
+    async function performSearch() {
+        const input = document.getElementById('searchInput');
+        const keyword = input ? input.value.trim() : '';
+        await renderResults(keyword);
+        
+        // 更新 URL 参数（用于分享和刷新保留）
+        const url = new URL(window.location.href);
+        if (keyword) {
+            url.searchParams.set('q', encodeURIComponent(keyword));
+        } else {
+            url.searchParams.delete('q');
+        }
+        window.history.replaceState({}, '', url.toString());
+    }
+
+    // 清空搜索
+    function clearSearch() {
+        const input = document.getElementById('searchInput');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        renderResults('');
+        const url = new URL(window.location.href);
+        url.searchParams.delete('q');
+        window.history.replaceState({}, '', url.toString());
+    }
+
+    // 初始化：加载数据 + 处理URL参数
+    async function init() {
+        // 先加载数据
+        await loadBlogsData();
+        
+        // 绑定事件
+        const searchBtn = document.getElementById('searchBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (searchBtn) searchBtn.addEventListener('click', performSearch);
+        if (clearBtn) clearBtn.addEventListener('click', clearSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+        }
+        
+        // 检查URL参数
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q');
+        if (q && q.trim()) {
+            const inputEl = document.getElementById('searchInput');
+            if (inputEl) inputEl.value = q;
+            await renderResults(q);
+        } else {
+            // 显示空状态
+            renderResults('');
+        }
+    }
+    
+    // 启动
+    init();
+</script>
+</body>
+</html>
