@@ -30,7 +30,6 @@
             background-color: #1a1a2e;
             z-index: 0;
         }
-        /* 内容容器，允许滚动 */
         .content-wrapper {
             position: relative;
             z-index: 1;
@@ -38,11 +37,10 @@
             display: flex;
             flex-direction: column;
         }
-        /* 顶栏 - 毛玻璃效果，固定 + 高z-index */
+        /* 顶栏 - 毛玻璃效果 */
         .top-bar {
-            position: fixed;
+            position: sticky;
             top: 0;
-            left: 0;
             width: 100%;
             height: 70px;
             background-color: rgba(136, 136, 136, 0.35);
@@ -219,7 +217,6 @@
             margin: 100px auto 60px;
             padding: 0 24px 40px;
         }
-        /* 信息卡片（毛玻璃效果） */
         .about-card {
             background: rgba(20, 24, 38, 0.7);
             backdrop-filter: blur(16px);
@@ -227,7 +224,6 @@
             padding: 2.8rem 2.5rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s ease;
         }
         .about-title {
             font-size: 2.6rem;
@@ -352,22 +348,23 @@
 <body>
 <div class="background-cover"></div>
 <div class="content-wrapper">
-    <!-- 顶栏 与主页完全一致（毛玻璃，固定） -->
+    <!-- 顶栏 -->
     <div class="top-bar">
         <div class="left-section" onclick="location.href='index.html';">
             <img class="logo" src="resource/logo.png" alt="logo">
             <span class="brand-name">Potatos</span>
         </div>
         <div class="right-section">
-            <a class="nav-link" href="about.html" target="_self">关于本站</a>
+            <a class="nav-link" href="blogs.html">博客记录</a>
+            <a class="nav-link" href="about.html">关于本站</a>
             <div class="dropdown" id="aboutDropdown">
                 <div class="dropdown-control">
                     <button class="dropbtn" id="dropdownButtonText">项目</button>
                     <span class="dropdown-icon" id="dropdownIcon">
-                        <svg id="iconLeft" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg id="iconLeft" width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M15 18L9 12L15 6" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <svg id="iconDown" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                        <svg id="iconDown" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display: none;">
                             <path d="M6 9L12 15L18 9" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </span>
@@ -378,18 +375,19 @@
                     <div class="placeholder-item">空</div>
                 </div>
             </div>
-            <div class="search-box">
-                <span class="search-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255, 255, 255, 0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- 搜索框 - 带跳转逻辑 -->
+            <div class="search-box" id="aboutSearchBox">
+                <span class="search-icon" id="aboutSearchIcon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
                     </svg>
                 </span>
-                <input type="text" class="search-input" placeholder="搜索...">
+                <input type="text" id="aboutKeywordInput" class="search-input" placeholder="搜索...">
             </div>
         </div>
     </div>
 
-    <!-- about 内容区 (完全基于用户提供的文本) -->
+    <!-- about 内容区 -->
     <div class="about-container">
         <div class="about-card">
             <div class="about-title">📡 关于赛博实验室</div>
@@ -423,8 +421,8 @@
     </div>
 </div>
 
-<!-- 下拉菜单脚本（与主页逻辑完全一致） -->
 <script>
+    // 下拉菜单脚本
     (function() {
         const dropdownContainer = document.getElementById('aboutDropdown');
         const dropdownContent = document.getElementById('dropdownContent');
@@ -432,6 +430,8 @@
         const iconDown = document.getElementById('iconDown');
         const iconWrapper = document.getElementById('dropdownIcon');
         const dropdownTextBtn = document.getElementById('dropdownButtonText');
+        
+        if (!dropdownContainer) return;
         
         let isMenuOpen = false;
         
@@ -462,48 +462,56 @@
         }
         
         function toggleMenu() {
-            if (isMenuOpen) {
-                closeMenu();
-            } else {
-                openMenu();
-            }
+            isMenuOpen ? closeMenu() : openMenu();
         }
         
-        if (iconWrapper) {
-            iconWrapper.addEventListener('click', function(event) {
-                event.stopPropagation();
-                toggleMenu();
-            });
-        }
-        
-        if (dropdownTextBtn) {
-            dropdownTextBtn.addEventListener('click', function(event) {
-                event.stopPropagation();
-                toggleMenu();
-            });
-        }
-        
-        if (dropdownContent) {
-            dropdownContent.addEventListener('click', function(event) {
-                event.stopPropagation();
-            });
-        }
-        
-        document.addEventListener('click', function(event) {
-            if (dropdownContainer && !dropdownContainer.contains(event.target)) {
-                closeMenu();
-            }
-        });
-        
-        isMenuOpen = false;
+        if (iconWrapper) iconWrapper.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+        if (dropdownTextBtn) dropdownTextBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+        if (dropdownContent) dropdownContent.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', (e) => { if (dropdownContainer && !dropdownContainer.contains(e.target)) closeMenu(); });
         updateIcon();
-        if (dropdownContent) dropdownContent.classList.remove('show');
+    })();
+
+    // 搜索框跳转逻辑（与主页、博客页一致）
+    (function() {
+        const searchInput = document.getElementById('aboutKeywordInput');
+        const searchIcon = document.getElementById('aboutSearchIcon');
+        const searchBox = document.getElementById('aboutSearchBox');
         
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && isMenuOpen) {
-                closeMenu();
+        function performSearchAndRedirect() {
+            let keyword = searchInput ? searchInput.value.trim() : '';
+            if (keyword === '') {
+                window.open('search.html?q=', '_blank');
+            } else {
+                const encoded = encodeURIComponent(keyword);
+                window.open(`search.html?q=${encoded}`, '_blank');
             }
-        });
+        }
+        
+        if (searchIcon) {
+            searchIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                performSearchAndRedirect();
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    performSearchAndRedirect();
+                }
+            });
+        }
+        
+        if (searchBox && searchInput) {
+            searchBox.addEventListener('click', function(e) {
+                if (e.target === searchBox || e.target.classList.contains('search-box')) {
+                    searchInput.focus();
+                }
+            });
+        }
     })();
 </script>
 </body>
