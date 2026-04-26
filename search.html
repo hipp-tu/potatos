@@ -20,7 +20,28 @@
             justify-content: center;
             position: relative;
         }
-        /* 背景图 - 完全覆盖 */
+        /* 白色透明滚动条 - 与博客页、通知页统一 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        /* Firefox 滚动条 */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
+        }
+        /* 背景图 */
         .bg-cover {
             position: fixed;
             top: 0;
@@ -121,6 +142,23 @@
         .clear-btn:hover {
             background: rgba(255, 255, 255, 0.35);
         }
+        .search-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            transition: opacity 0.2s;
+        }
+        .search-icon-btn:hover {
+            opacity: 0.7;
+        }
+        .search-icon-svg path {
+            stroke: #E0E7FF;
+            stroke-width: 1.8;
+        }
         .status-area {
             text-align: center;
             padding: 20px;
@@ -206,28 +244,17 @@
         }
         .loading-spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: #FFE6B0;
             animation: spin 0.8s linear infinite;
-            margin-right: 8px;
+            margin-right: 10px;
             vertical-align: middle;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 215, 120, 0.6);
-            border-radius: 10px;
         }
         @media (max-width: 550px) {
             .brand-title { font-size: 1.6rem; }
@@ -238,7 +265,6 @@
     </style>
 </head>
 <body>
-<!-- 背景图 -->
 <div class="bg-cover"></div>
 
 <div class="search-center">
@@ -248,13 +274,19 @@
     </div>
     <div class="search-container">
         <div class="search-form">
+            <button class="search-icon-btn" id="searchIconBtn" type="button" aria-label="搜索">
+                <svg class="search-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="#E0E7FF" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+            </button>
             <input type="text" id="searchInput" class="search-input" placeholder="搜索博客内容 (类型、标签、标题、正文)..." autocomplete="off">
-            <button id="clearBtn" class="clear-btn">✕</button>
-            <button id="searchBtn" class="search-submit">检索</button>
+            <div class="search-actions">
+                <button id="clearSearchBtn" class="clear-btn" type="button">✕</button>
+                <button id="submitSearchBtn" class="search-submit" type="button">检索</button>
+            </div>
         </div>
     </div>
     
-    <!-- 状态显示区域 -->
     <div id="statusArea" class="status-area">📡 正在加载 resource/blogs.json ...</div>
     
     <div id="resultsArea" class="results-area" style="display: none;">
@@ -264,18 +296,13 @@
 </div>
 
 <script>
-    // 全局数据
     let blogsData = [];
     let isLoading = false;
     let dataLoaded = false;
 
-    // 从 resource/blogs.json 加载数据
     async function loadBlogsData() {
-        if (dataLoaded && blogsData.length > 0) {
-            return blogsData;
-        }
+        if (dataLoaded && blogsData.length > 0) return blogsData;
         if (isLoading) {
-            // 等待加载完成
             return new Promise(resolve => {
                 const checkInterval = setInterval(() => {
                     if (!isLoading) {
@@ -294,16 +321,13 @@
         }
         
         try {
-            // 从 resource 目录加载 blogs.json 文件
             const response = await fetch('resource/blogs.json?t=' + Date.now());
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             if (Array.isArray(data)) {
                 blogsData = data;
                 dataLoaded = true;
-                console.log(`成功从 resource/blogs.json 加载 ${blogsData.length} 条博客数据`);
+                console.log(`成功加载 ${blogsData.length} 条博客数据`);
                 if (statusDiv) {
                     statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇文章，可以开始搜索`;
                     setTimeout(() => {
@@ -311,10 +335,10 @@
                     }, 2000);
                 }
             } else {
-                throw new Error('数据格式错误：期望数组');
+                throw new Error('数据格式错误');
             }
         } catch (err) {
-            console.error('加载 resource/blogs.json 失败:', err);
+            console.error('加载失败:', err);
             if (statusDiv) {
                 statusDiv.innerHTML = `❌ 加载失败: ${err.message}<br>请确保 resource/blogs.json 文件存在`;
                 statusDiv.className = 'status-area error';
@@ -326,7 +350,6 @@
         return blogsData;
     }
 
-    // 从正文中提取纯文本（去除HTML标签）
     function stripHtml(html) {
         if (!html) return '';
         const tmp = document.createElement('div');
@@ -334,7 +357,6 @@
         return tmp.textContent || tmp.innerText || '';
     }
 
-    // 搜索核心逻辑
     function searchBlogs(keyword) {
         if (!keyword || keyword.trim() === "") return [];
         if (!blogsData.length) return [];
@@ -389,13 +411,14 @@
         return result;
     }
 
-    // 显示完整内容模态框
     function showFullContent(blog) {
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
         
         const card = document.createElement('div');
         card.style.cssText = 'max-width:800px; width:100%; max-height:85vh; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:auto; padding:28px; color:#f0f3fa;';
+        
+        const tagsHtml = (blog.tags || []).map(tag => `<span style="background:rgba(255,215,0,0.2); padding:2px 12px; border-radius:20px; font-size:0.75rem; margin-right:8px;">#${escapeHtml(tag)}</span>`).join('');
         
         card.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,150,0.3); padding-bottom:12px;">
@@ -405,10 +428,10 @@
             <div style="margin-bottom:12px;">
                 <span style="background:#FFD96630; padding:4px 12px; border-radius:40px;">📁 ${escapeHtml(blog.type)}</span>
             </div>
-            <div style="margin-bottom:20px; display:flex; gap:8px; flex-wrap:wrap;">
-                ${(blog.tags || []).map(t => `<span style="background:rgba(255,215,0,0.2); padding:2px 12px; border-radius:20px; font-size:0.75rem;">#${escapeHtml(t)}</span>`).join('')}
+            <div style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:8px;">
+                ${tagsHtml}
             </div>
-            <div style="line-height:1.6; font-size:1rem;">${blog.body || '暂无正文内容'}</div>
+            <div style="line-height:1.7; font-size:1rem;">${blog.body || '暂无正文内容'}</div>
         `;
         
         modal.appendChild(card);
@@ -419,18 +442,13 @@
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     }
 
-    // 渲染搜索结果
     async function renderResults(keyword) {
         const resultsList = document.getElementById('resultsList');
         const resultsArea = document.getElementById('resultsArea');
         const statusDiv = document.getElementById('statusArea');
         
         if (!resultsList) return;
-
-        // 确保数据已加载
-        if (!dataLoaded && blogsData.length === 0) {
-            await loadBlogsData();
-        }
+        if (!dataLoaded && blogsData.length === 0) await loadBlogsData();
         
         if (!blogsData.length) {
             if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) {
@@ -442,10 +460,7 @@
             return;
         }
         
-        // 隐藏状态区域（数据加载成功）
-        if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) {
-            statusDiv.style.display = 'none';
-        }
+        if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) statusDiv.style.display = 'none';
         
         if (!keyword || keyword.trim() === "") {
             resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索博客内容</div>';
@@ -478,34 +493,24 @@
         resultsList.innerHTML = html;
         resultsArea.style.display = 'block';
 
-        // 绑定点击事件
         document.querySelectorAll('.result-item').forEach(el => {
             el.addEventListener('click', () => {
                 const idx = parseInt(el.getAttribute('data-index'));
-                if (!isNaN(idx) && results[idx]) {
-                    showFullContent(results[idx]);
-                }
+                if (!isNaN(idx) && results[idx]) showFullContent(results[idx]);
             });
         });
     }
 
-    // 执行搜索（带URL更新）
     async function performSearch() {
         const input = document.getElementById('searchInput');
         const keyword = input ? input.value.trim() : '';
         await renderResults(keyword);
-        
-        // 更新 URL 参数
         const url = new URL(window.location.href);
-        if (keyword) {
-            url.searchParams.set('q', encodeURIComponent(keyword));
-        } else {
-            url.searchParams.delete('q');
-        }
+        if (keyword) url.searchParams.set('q', encodeURIComponent(keyword));
+        else url.searchParams.delete('q');
         window.history.replaceState({}, '', url.toString());
     }
 
-    // 清空搜索
     function clearSearch() {
         const input = document.getElementById('searchInput');
         if (input) {
@@ -518,26 +523,20 @@
         window.history.replaceState({}, '', url.toString());
     }
 
-    // 初始化
     async function init() {
         await loadBlogsData();
         
-        const searchBtn = document.getElementById('searchBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const searchInput = document.getElementById('searchInput');
-        
-        if (searchBtn) searchBtn.addEventListener('click', performSearch);
-        if (clearBtn) clearBtn.addEventListener('click', clearSearch);
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') performSearch();
-            });
-        }
+        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
+        document.getElementById('searchIconBtn').addEventListener('click', performSearch);
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
         
         const params = new URLSearchParams(window.location.search);
         const q = params.get('q');
         if (q && q.trim()) {
-            if (searchInput) searchInput.value = q;
+            document.getElementById('searchInput').value = q;
             await renderResults(q);
         } else {
             renderResults('');
