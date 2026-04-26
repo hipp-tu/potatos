@@ -31,7 +31,7 @@
             transition: all 0.2s ease;
             z-index: 0;
         }
-        /* 顶栏 - 固定 + 毛玻璃 + 高层级，确保覆盖内容且不被滚动穿透 */
+        /* 顶栏 - 固定 + 毛玻璃 + 高层级 */
         .top-bar {
             position: fixed;
             top: 0;
@@ -86,6 +86,7 @@
             opacity: 0.7;
             text-decoration: underline;
         }
+        /* 搜索框样式 */
         .search-box {
             display: flex;
             align-items: center;
@@ -94,6 +95,7 @@
             padding: 5px 12px;
             transition: all 0.2s ease;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            cursor: text;
         }
         .search-box:hover,
         .search-box:focus-within {
@@ -123,6 +125,7 @@
         .search-icon svg path {
             stroke: rgba(255, 255, 255, 0.8);
         }
+        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -204,7 +207,7 @@
             vertical-align: middle;
         }
 
-        /* 主页正文区域 - 为顶栏留出空间，并允许滚动 */
+        /* 主页正文区域 */
         .hero-section {
             position: relative;
             z-index: 1;
@@ -268,7 +271,6 @@
             line-height: 1.2;
         }
 
-        /* 纯白实心横线 */
         .hero-divider {
             display: block;
             width: 100%;
@@ -287,7 +289,6 @@
             letter-spacing: 4px;
         }
 
-        /* 响应式样式 */
         @media (max-width: 900px) {
             .hero-container {
                 flex-direction: column;
@@ -334,7 +335,7 @@
 <body>
 <div class="background-cover"></div>
 
-<!-- 顶栏 毛玻璃+高z-index -->
+<!-- 顶栏 -->
 <div class="top-bar">
     <div class="left-section" onclick="location.href='index.html';">
         <img class="logo" src="resource/logo.png" alt="logo">
@@ -360,13 +361,14 @@
                 <div class="placeholder-item">空</div>
             </div>
         </div>
-        <div class="search-box">
-            <span class="search-icon">
+        <!-- 搜索框 - 点击搜索时携带参数跳转到 search.html -->
+        <div class="search-box" id="homeSearchBox">
+            <span class="search-icon" id="homeSearchIcon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255, 255, 255, 0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </span>
-            <input type="text" class="search-input" placeholder="搜索...">
+            <input type="text" class="search-input" id="homeKeywordInput" placeholder="搜索...">
         </div>
     </div>
 </div>
@@ -464,6 +466,56 @@
                 closeMenu();
             }
         });
+    })();
+
+    // ================== 主页搜索跳转逻辑 ==================
+    (function() {
+        const searchInput = document.getElementById('homeKeywordInput');
+        const searchIcon = document.getElementById('homeSearchIcon');
+        const searchBox = document.getElementById('homeSearchBox');
+        
+        // 执行跳转：获取关键词，拼接到 search.html 的 ?q= 参数，并且在新标签页打开
+        function performSearchAndRedirect() {
+            let keyword = searchInput ? searchInput.value.trim() : '';
+            if (keyword === '') {
+                // 如果关键词为空，仍然打开搜索页，但不带参数或传递空字符串 (可选)
+                // 为了体验，传递空字符串，但search.html能处理空状态
+                window.open('search.html?q=', '_blank');
+            } else {
+                // 对参数进行编码
+                const encoded = encodeURIComponent(keyword);
+                window.open(`search.html?q=${encoded}`, '_blank');
+            }
+        }
+        
+        // 给搜索图标添加点击事件
+        if (searchIcon) {
+            searchIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                performSearchAndRedirect();
+            });
+        }
+        
+        // 给搜索框添加键盘事件 (回车触发)
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    performSearchAndRedirect();
+                }
+            });
+        }
+        
+        // 可选: 点击整个搜索框容器也可以聚焦，但不自动跳转；但保持和普通搜索框行为一样
+        if (searchBox && searchInput) {
+            searchBox.addEventListener('click', function(e) {
+                // 如果点击的是容器而非输入框内部，让输入框获得焦点
+                if (e.target === searchBox || e.target.classList.contains('search-box')) {
+                    searchInput.focus();
+                }
+            });
+        }
     })();
 </script>
 </body>
