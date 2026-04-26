@@ -1,6 +1,6 @@
 [
   {
-    "type": "技术笔记",
+    "type": "（测试用）技术笔记",
     "tags": ["C++", "GUI", "框架"],
     "title": "PotatoCPPApp - 现代C++快速开发框架",
     "cover": "resource/project_cover.png",
@@ -8,7 +8,7 @@
     "summary": "开源C++框架，包含GUI与交互模块，方便开发者快速构建桌面应用。"
   },
   {
-    "type": "日志",
+    "type": "（测试用）日志",
     "tags": ["Blender", "绑骨", "3D"],
     "title": "Blender绑骨踩坑日记：从零开始的骨骼",
     "cover": "resource/blog_cover.png",
@@ -16,7 +16,7 @@
     "summary": "记录Blender绑骨过程中的踩坑经历和解决方案。"
   },
   {
-    "type": "AI 探索",
+    "type": "（测试用）AI 探索",
     "tags": ["DeepSeek", "生产力", "AI"],
     "title": "DeepSeek打工仔小队配置指南",
     "cover": "resource/blog_cover.png",
@@ -32,7 +32,7 @@
     "summary": "测试搜索功能的示例文章。"
   },
   {
-    "type": "赛博日志",
+    "type": "（测试用）赛博日志",
     "tags": ["个人", "思考", "独立开发"],
     "title": "土匪potato的赛博实验室成立宣言",
     "cover": "resource/blog_cover.png",
