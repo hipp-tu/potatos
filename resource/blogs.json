@@ -1,42 +1,9 @@
 [
   {
-    "type": "（测试用）技术笔记",
-    "tags": ["C++", "GUI", "框架"],
-    "title": "PotatoCPPApp - 现代C++快速开发框架",
-    "cover": "resource/project_cover.png",
-    "body": "<p>PotatoCPPApp 是一个基于现代C++的轻量级应用框架，内置GUI支撑和事件系统。你可以快速集成到自己的C++项目中，大幅提升开发效率。</p><h3>核心特性</h3><ul><li>跨平台支持 (Windows / Linux / macOS)</li><li>内置ImGui风格的简单窗口抽象</li><li>异步任务线程池</li><li>易扩展的插件机制</li></ul><p>项目已在GitHub开源，欢迎 star 和共建。</p>",
-    "summary": "开源C++框架，包含GUI与交互模块，方便开发者快速构建桌面应用。"
-  },
-  {
-    "type": "（测试用）日志",
-    "tags": ["Blender", "绑骨", "3D"],
-    "title": "Blender绑骨踩坑日记：从零开始的骨骼",
-    "cover": "resource/blog_cover.png",
-    "body": "<p>最近尝试在Blender中为角色模型绑骨，遇到很多奇怪的问题。记录一下心得：</p><ul><li>对称命名要规范，否则镜像权重会失效</li><li>自动权重并不总是靠谱，手动调整更精确</li><li>顶点组要提前分割好区域</li></ul><p>绑定完成后成就感满满，虽然过程很折磨人。Blender绑骨好难，但是值得。</p>",
-    "summary": "记录Blender绑骨过程中的踩坑经历和解决方案。"
-  },
-  {
-    "type": "（测试用）AI 探索",
-    "tags": ["DeepSeek", "生产力", "AI"],
-    "title": "DeepSeek打工仔小队配置指南",
-    "cover": "resource/blog_cover.png",
-    "body": "<p>使用DeepSeek API可以轻松打造自己的AI助理小队。本文分享如何通过提示词工程让AI高效完成代码生成、文档撰写等任务。</p><h3>实用技巧</h3><ul><li>角色扮演设定让输出更稳定</li><li>分步骤拆解复杂问题</li><li>结合上下文示例提升准确率</li></ul><p>如果你也拿DeepSeek当打工仔，你也有一个AI小队。</p>",
-    "summary": "如何使用DeepSeek提高编程和工作效率。"
-  },
-  {
-    "type": "测试",
-    "tags": ["示例", "测试", "搜索演示"],
-    "title": "测试 - 搜索功能演示",
-    "cover": "resource/blog_cover.png",
-    "body": "<p>这是一个测试条目，用于验证搜索系统是否正常工作。</p><p>你可以通过关键词 <strong>测试</strong>、<strong>示例</strong> 或 <strong>搜索演示</strong> 来找到它。</p><p>搜索功能会实时匹配类型、标签、标题和正文内容。</p>",
-    "summary": "测试搜索功能的示例文章。"
-  },
-  {
-    "type": "（测试用）赛博日志",
-    "tags": ["个人", "思考", "独立开发"],
-    "title": "土匪potato的赛博实验室成立宣言",
-    "cover": "resource/blog_cover.png",
-    "body": "<p>「土匪potato的赛博实验室」是一个“数字据点”。这里是属于创造力块茎的一片净土。Potatos. 不仅仅是一个名字，更象征着朴实但充满可能性的“块茎网络”——深深扎根，蔓延生长。</p><p>本站目前主要聚集于C++项目和赛博日志分享。未来会逐步添加更多的内容，欢迎交流。</p>",
-    "summary": "赛博实验室的起源与愿景。"
+    "type": "网站历史",
+    "tags": ["HTML", "Javascript", "CSS"],
+    "title": "2026/4/26 - 网站开放",
+    "body": "<p>自己的网站终于搭起来了，在DeepSeek帮助下，网站迅速建成，但目前还在公测（虽然只有我一个人在线）</p>",
+    "summary": "来看看Potatos.的建成"
   }
 ]
