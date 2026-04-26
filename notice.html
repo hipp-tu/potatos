@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>站务通知 | Potatos. - 土匪potato的赛博实验室</title>
+    <link rel="icon" type="image/png" href="resource/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #0a0c12;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .bg-cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('resource/notice_background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            background-color: #1a1a2e;
+            z-index: 0;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
+        }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: rgba(136, 136, 136, 0.35);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .left-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+        }
+        .logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+        .brand-name {
+            color: white;
+            font-size: 32px;
+            font-weight: normal;
+            text-decoration: none;
+        }
+        .brand-name:hover {
+            opacity: 0.8;
+        }
+        .right-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-left: auto;
+        }
+        .nav-link {
+            color: #C3C3C3;
+            font-size: 14px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .nav-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .dropbtn {
+            background: none;
+            border: none;
+            color: #C3C3C3;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            font-family: inherit;
+            padding: 0;
+        }
+        .dropbtn:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+        .dropdown-icon svg path {
+            stroke: #C3C3C3;
+        }
+        .dropdown-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 20px;
+            height: 20px;
+            margin-left: 6px;
+        }
+        .dropdown-icon svg {
+            display: block;
+            transition: all 0.2s ease;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.5);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 101;
+            border-radius: 4px;
+            margin-top: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-content a {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .dropdown-content .placeholder-item {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            display: block;
+            font-size: 14px;
+            pointer-events: none;
+            background-color: transparent;
+            min-height: 36px;
+            text-align: left;
+        }
+        .dropdown-control {
+            display: flex;
+            align-items: center;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 5px 12px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .search-box:hover,
+        .search-box:focus-within {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            width: 160px;
+            padding: 6px 0;
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+        .search-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            cursor: pointer;
+        }
+        .search-icon svg path {
+            stroke: rgba(255, 255, 255, 0.8);
+        }
+        .main-content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 70px;
+            padding: 40px 0;
+        }
+        .notice-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .notice-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .notice-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #FFE6B0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .notice-header p {
+            color: #C7D0EB;
+            margin-top: 12px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        .notice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .notice-card {
+            background: rgba(20, 24, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .notice-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 220, 120, 0.4);
+        }
+        .notice-summary {
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .notice-icon {
+            font-size: 2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+        .notice-info {
+            flex: 1;
+        }
+        .notice-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #F5E9CF;
+            margin-bottom: 6px;
+        }
+        .notice-date {
+            font-size: 0.75rem;
+            color: #A0A8C0;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+        .notice-excerpt {
+            font-size: 0.85rem;
+            color: #C7D0EB;
+            line-height: 1.45;
+            opacity: 0.85;
+        }
+        .notice-badge {
+            background: rgba(255, 200, 100, 0.2);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            color: #FFE0A0;
+            white-space: nowrap;
+        }
+        .modal-full {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-card {
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            background: #1e1f2c;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 200, 0.3);
+            overflow: auto;
+            padding: 28px;
+            color: #f0f3fa;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 150, 0.3);
+            padding-bottom: 12px;
+        }
+        .modal-header h2 {
+            color: #FFE6B0;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #fff;
+            border-radius: 40px;
+            width: 40px;
+            height: 40px;
+        }
+        .modal-date {
+            font-size: 0.8rem;
+            color: #A0A8C0;
+            margin-bottom: 16px;
+        }
+        .modal-content {
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+        .modal-content p {
+            margin-bottom: 12px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(20, 24, 38, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        .empty-state p {
+            color: #C7D0EB;
+            font-size: 1.1rem;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #FFE6B0;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 680px) {
+            .brand-name { font-size: 1.3rem; }
+            .logo { height: 38px; }
+            .notice-header h1 { font-size: 2rem; }
+            .top-bar { padding: 0 16px; }
+            .search-input { width: 100px; }
+            .notice-summary { padding: 18px 20px; }
+            .notice-icon { font-size: 1.5rem; min-width: 40px; }
+            .notice-title { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-cover"></div>
+
+<div class="top-bar">
+    <div class="left-section" onclick="location.href='index.html';">
+        <img class="logo" src="resource/logo.png" alt="logo">
+        <span class="brand-name">Potatos</span>
+    </div>
+    <div class="right-section">
+        <a class="nav-link" href="blogs.html">博客记录</a>
+        <a class="nav-link" href="about.html">关于本站</a>
+        <div class="dropdown" id="projectDropdown">
+            <div class="dropdown-control">
+                <button class="dropbtn" id="dropdownButtonText">项目</button>
+                <span class="dropdown-icon" id="dropdownIcon">
+                    <svg id="iconLeft" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg id="iconDown" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display: none;">
+                        <path d="M6 9L12 15L18 9" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </div>
+            <div class="dropdown-content" id="dropdownContent">
+                <a href="#">PotatoCPPApp</a>
+                <div class="placeholder-item">空</div>
+                <div class="placeholder-item">空</div>
+            </div>
+        </div>
+        <div class="search-box" id="noticeSearchBox">
+            <span class="search-icon" id="noticeSearchIcon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+                </svg>
+            </span>
+            <input type="text" id="noticeKeywordInput" class="search-input" placeholder="搜索...">
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <div class="notice-container">
+        <div class="notice-header">
+            <h1>🔔 站务通知</h1>
+            <p>站点更新 · 功能发布 · 重要公告</p>
+        </div>
+        <div id="noticeList" class="notice-list">
+            <div style="text-align:center; padding:60px; color:#FFE6B0; background:rgba(0,0,0,0.4); border-radius:40px;">
+                <span class="loading-spinner"></span> 正在加载通知...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let noticesData = [];
+    let isLoading = false;
+
+    async function loadNotices() {
+        if (noticesData.length > 0) return noticesData;
+        if (isLoading) {
+            return new Promise(resolve => {
+                const check = setInterval(() => {
+                    if (!isLoading) {
+                        clearInterval(check);
+                        resolve(noticesData);
+                    }
+                }, 100);
+            });
+        }
+        isLoading = true;
+        try {
+            const response = await fetch('resource/notices.json?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                noticesData = data;
+                console.log(`成功加载 ${noticesData.length} 条通知`);
+            } else {
+                throw new Error('数据格式错误');
+            }
+        } catch (err) {
+            console.error('加载 notices.json 失败:', err);
+            noticesData = [];
+        } finally {
+            isLoading = false;
+        }
+        return noticesData;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            return m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;');
+        });
+    }
+
+    function showNoticeDetail(notice) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-full';
+        modal.innerHTML = `
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>${escapeHtml(notice.title)}</h2>
+                    <button class="modal-close" id="modalCloseBtn">✕</button>
+                </div>
+                <div class="modal-date">📅 ${escapeHtml(notice.date)}</div>
+                <div class="modal-content">${notice.content || '暂无详细内容'}</div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        const closeBtn = document.getElementById('modalCloseBtn');
+        if (closeBtn) closeBtn.onclick = () => modal.remove();
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    }
+
+    async function renderNotices() {
+        const container = document.getElementById('noticeList');
+        if (!container) return;
+        await loadNotices();
+        if (!noticesData.length) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔔</div><p>暂无站务通知</p><p style="font-size:0.85rem; margin-top:8px;">请稍后再来~</p></div>`;
+            return;
+        }
+        let html = '';
+        for (const notice of noticesData) {
+            html += `
+                <div class="notice-card" data-id="${notice.id}">
+                    <div class="notice-summary">
+                        <div class="notice-icon">${notice.icon}</div>
+                        <div class="notice-info">
+                            <div class="notice-title">${escapeHtml(notice.title)}</div>
+                            <div class="notice-date">📅 ${escapeHtml(notice.date)}</div>
+                            <div class="notice-excerpt">${escapeHtml(notice.summary)}</div>
+                        </div>
+                        <div class="notice-badge">查看详情 →</div>
+                    </div>
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+        document.querySelectorAll('.notice-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = parseInt(card.getAttribute('data-id'));
+                const notice = noticesData.find(n => n.id === id);
+                if (notice) showNoticeDetail(notice);
+            });
+        });
+    }
+
+    function performSearch() {
+        const inputEl = document.getElementById('noticeKeywordInput');
+        const keyword = inputEl ? inputEl.value.trim() : '';
+        window.open(keyword ? `search.html?q=${encodeURIComponent(keyword)}` : 'search.html', '_blank');
+    }
+    
+    function bindEvents() {
+        const searchIcon = document.getElementById('noticeSearchIcon');
+        const searchInput = document.getElementById('noticeKeywordInput');
+        if (searchIcon) searchIcon.addEventListener('click', performSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); performSearch(); }
+            });
+        }
+    }
+
+    function bindDropdown() {
+        const container = document.getElementById('projectDropdown');
+        const content = document.getElementById('dropdownContent');
+        const iLeft = document.getElementById('iconLeft');
+        const iDown = document.getElementById('iconDown');
+        const wrapper = document.getElementById('dropdownIcon');
+        const textBtn = document.getElementById('dropdownButtonText');
+        if (!container) return;
+        let open = false;
+        function update() {
+            if (open) { if (iLeft) iLeft.style.display = 'none'; if (iDown) iDown.style.display = 'block'; }
+            else { if (iLeft) iLeft.style.display = 'block'; if (iDown) iDown.style.display = 'none'; }
+        }
+        function openMenu() { if (!open) { open = true; if (content) content.classList.add('show'); update(); } }
+        function closeMenu() { if (open) { open = false; if (content) content.classList.remove('show'); update(); } }
+        function toggle(e) { e.stopPropagation(); open ? closeMenu() : openMenu(); }
+        if (wrapper) wrapper.addEventListener('click', toggle);
+        if (textBtn) textBtn.addEventListener('click', toggle);
+        if (content) content.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', (e) => { if (container && !container.contains(e.target)) closeMenu(); });
+        update();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderNotices();
+        bindEvents();
+        bindDropdown();
+    });
+</script>
+</body>
+</html>
