@@ -19,7 +19,6 @@
             flex-direction: column;
             position: relative;
         }
-        /* 背景图 */
         .bg-cover {
             position: fixed;
             top: 0;
@@ -33,7 +32,6 @@
             background-color: #1a1a2e;
             z-index: 0;
         }
-        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -53,7 +51,6 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
         }
-        /* 顶栏 */
         .top-bar {
             position: fixed;
             top: 0;
@@ -105,7 +102,6 @@
             opacity: 0.7;
             text-decoration: underline;
         }
-        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -183,7 +179,6 @@
             display: flex;
             align-items: center;
         }
-        /* 搜索框 */
         .search-box {
             display: flex;
             align-items: center;
@@ -221,7 +216,6 @@
         .search-icon svg path {
             stroke: rgba(255, 255, 255, 0.8);
         }
-        /* 主内容区 - 参考 search.html 的居中方式 */
         .main-content {
             position: relative;
             z-index: 2;
@@ -235,7 +229,7 @@
         }
         .blogs-container {
             width: 100%;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -258,30 +252,6 @@
             font-size: 1rem;
             opacity: 0.8;
         }
-        /* 加载状态 */
-        .loading-area {
-            text-align: center;
-            padding: 60px;
-            color: #FFE6B0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-radius: 40px;
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #FFE6B0;
-            animation: spin 0.8s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        /* 博客网格 */
         .blogs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -301,11 +271,10 @@
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
             border-color: rgba(255, 220, 120, 0.5);
         }
-        .blog-cover {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #2a2e3e, #1a1e2e);
+        /* 砍掉封面图，改用纯色渐变顶栏替代 */
+        .blog-header {
+            height: 12px;
+            background: linear-gradient(90deg, #FFD966, #F4B942, #FFD966);
         }
         .blog-info {
             padding: 22px;
@@ -345,7 +314,28 @@
             line-height: 1.5;
             opacity: 0.9;
         }
-        /* 空状态 */
+        .loading-area {
+            text-align: center;
+            padding: 60px;
+            color: #FFE6B0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #FFE6B0;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
         .empty-state {
             text-align: center;
             padding: 60px 40px;
@@ -388,14 +378,8 @@
             .blogs-container {
                 padding: 0 16px;
             }
-            .blog-cover {
-                height: 160px;
-            }
             .blog-info {
                 padding: 18px;
-            }
-            .empty-state {
-                padding: 40px 20px;
             }
         }
     </style>
@@ -403,7 +387,6 @@
 <body>
 <div class="bg-cover"></div>
 
-<!-- 顶栏 -->
 <div class="top-bar">
     <div class="left-section" onclick="location.href='index.html';">
         <img class="logo" src="resource/logo.png" alt="logo">
@@ -441,7 +424,6 @@
     </div>
 </div>
 
-<!-- 主内容区 - 完全参考 search.html 的结构 -->
 <div class="main-content">
     <div class="blogs-container">
         <div class="blogs-header">
@@ -574,19 +556,18 @@
         let html = '';
         for (let i = 0; i < blogsData.length; i++) {
             const blog = blogsData[i];
-            const previewText = blog.summary || stripHtml(blog.body || '').substring(0, 100);
-            const coverUrl = blog.cover && blog.cover !== '' ? blog.cover : 'resource/blog_cover.png';
+            const previewText = blog.summary || stripHtml(blog.body || '').substring(0, 120);
             
             html += `
                 <div class="blog-card" data-index="${i}">
-                    <img class="blog-cover" src="${coverUrl}" alt="${escapeHtml(blog.title)}" onerror="this.src='resource/blog_cover.png'">
+                    <div class="blog-header"></div>
                     <div class="blog-info">
                         <div class="blog-type">📁 ${escapeHtml(blog.type)}</div>
                         <div class="blog-title">${escapeHtml(blog.title)}</div>
                         <div class="blog-tags">
                             ${(blog.tags || []).slice(0, 5).map(tag => `<span class="blog-tag">#${escapeHtml(tag)}</span>`).join('')}
                         </div>
-                        <div class="blog-excerpt">${escapeHtml(previewText)}${previewText.length >= 100 ? '...' : ''}</div>
+                        <div class="blog-excerpt">${escapeHtml(previewText)}${previewText.length >= 120 ? '...' : ''}</div>
                     </div>
                 </div>
             `;
@@ -603,7 +584,7 @@
         });
     }
 
-    function performSiteSearch() {
+    function performSearch() {
         const inputEl = document.getElementById('blogsKeywordInput');
         const keyword = inputEl ? inputEl.value.trim() : '';
         window.open(keyword ? `search.html?q=${encodeURIComponent(keyword)}` : 'search.html', '_blank');
@@ -612,12 +593,12 @@
     function bindSearchEvents() {
         const searchIcon = document.getElementById('blogsSearchIcon');
         const searchInput = document.getElementById('blogsKeywordInput');
-        if (searchIcon) searchIcon.addEventListener('click', performSiteSearch);
+        if (searchIcon) searchIcon.addEventListener('click', performSearch);
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    performSiteSearch();
+                    performSearch();
                 }
             });
         }
