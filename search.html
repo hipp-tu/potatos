@@ -20,7 +20,7 @@
             justify-content: center;
             position: relative;
         }
-        /* 白色透明滚动条 - 与博客页、通知页统一 */
+        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -36,12 +36,10 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.8);
         }
-        /* Firefox 滚动条 */
         * {
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
         }
-        /* 背景图 */
         .bg-cover {
             position: fixed;
             top: 0;
@@ -274,20 +272,20 @@
     </div>
     <div class="search-container">
         <div class="search-form">
-            <button class="search-icon-btn" id="searchIconBtn" type="button" aria-label="搜索">
+            <button class="search-icon-btn" id="searchIconBtn" type="button">
                 <svg class="search-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="#E0E7FF" stroke-width="1.8" stroke-linecap="round"/>
                 </svg>
             </button>
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索博客内容 (类型、标签、标题、正文)..." autocomplete="off">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索博客、通知、页面..." autocomplete="off">
             <div class="search-actions">
-                <button id="clearSearchBtn" class="clear-btn" type="button">✕</button>
-                <button id="submitSearchBtn" class="search-submit" type="button">检索</button>
+                <button id="clearSearchBtn" class="clear-btn">✕</button>
+                <button id="submitSearchBtn" class="search-submit">检索</button>
             </div>
         </div>
     </div>
     
-    <div id="statusArea" class="status-area">📡 正在加载 resource/blogs.json ...</div>
+    <div id="statusArea" class="status-area">📡 正在加载数据源...</div>
     
     <div id="resultsArea" class="results-area" style="display: none;">
         <div class="results-header">✨ 搜索结果</div>
@@ -296,98 +294,109 @@
 </div>
 
 <script>
-    let blogsData = [];
+    // ========== 全局数据 ==========
+    let blogsData = [];      // blogs.json 数据
+    let noticesData = [];    // notices.json 数据
+    let staticPages = [];    // 静态页面数据
     let isLoading = false;
-    let dataLoaded = false;
+    let loadedCount = 0;
+    let totalToLoad = 3;
 
-    async function loadBlogsData() {
-        if (dataLoaded && blogsData.length > 0) return blogsData;
-        if (isLoading) {
-            return new Promise(resolve => {
-                const checkInterval = setInterval(() => {
-                    if (!isLoading) {
-                        clearInterval(checkInterval);
-                        resolve(blogsData);
-                    }
-                }, 100);
-            });
+    // ========== 静态页面数据（硬编码可搜索内容） ==========
+    const STATIC_PAGES_CONFIG = [
+        {
+            type: "📄 页面",
+            title: "关于本站",
+            link: "about.html",
+            content: "土匪potato的赛博实验室 数字据点 C++项目 赛博日志 PotatoCPPApp 关于土匪potato 联系方式 13661521279@163.com GitHub hipp-tu",
+            summary: "了解赛博实验室的缘起、实验项目和土匪potato的故事。"
+        },
+        {
+            type: "📄 页面",
+            title: "站务通知",
+            link: "notice.html",
+            content: "站务通知 站点更新 功能发布 重要公告 Potatos站点上线 搜索功能 博客系统 界面优化",
+            summary: "查看站点更新、功能发布和重要公告。"
+        },
+        {
+            type: "📄 页面",
+            title: "博客记录",
+            link: "blogs.html",
+            content: "博客 赛博日志 技术文章 C++ Blender DeepSeek 教程 分享",
+            summary: "浏览所有博客文章，阅读技术分享和创作心得。"
+        },
+        {
+            type: "📄 页面",
+            title: "首页",
+            link: "index.html",
+            content: "Potatos 土匪potato 赛博实验室 主页 土豆",
+            summary: "返回 Potatos. 赛博实验室主页。"
         }
-        
-        isLoading = true;
-        const statusDiv = document.getElementById('statusArea');
-        if (statusDiv) {
-            statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载 resource/blogs.json ...';
-            statusDiv.className = 'status-area';
-        }
-        
+    ];
+
+    // ========== 加载 blogs.json ==========
+    async function loadBlogs() {
         try {
             const response = await fetch('resource/blogs.json?t=' + Date.now());
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             if (Array.isArray(data)) {
                 blogsData = data;
-                dataLoaded = true;
-                console.log(`成功加载 ${blogsData.length} 条博客数据`);
-                if (statusDiv) {
-                    statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇文章，可以开始搜索`;
-                    setTimeout(() => {
-                        if (statusDiv) statusDiv.style.display = 'none';
-                    }, 2000);
-                }
-            } else {
-                throw new Error('数据格式错误');
+                console.log(`✅ 加载 blogs.json: ${blogsData.length} 条`);
             }
         } catch (err) {
-            console.error('加载失败:', err);
-            if (statusDiv) {
-                statusDiv.innerHTML = `❌ 加载失败: ${err.message}<br>请确保 resource/blogs.json 文件存在`;
-                statusDiv.className = 'status-area error';
-            }
+            console.warn('加载 blogs.json 失败:', err);
             blogsData = [];
-        } finally {
-            isLoading = false;
         }
-        return blogsData;
     }
 
+    // ========== 加载 notices.json ==========
+    async function loadNotices() {
+        try {
+            const response = await fetch('resource/notices.json?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                noticesData = data;
+                console.log(`✅ 加载 notices.json: ${noticesData.length} 条`);
+            }
+        } catch (err) {
+            console.warn('加载 notices.json 失败:', err);
+            noticesData = [];
+        }
+    }
+
+    // ========== 加载静态页面 ==========
+    function loadStaticPages() {
+        staticPages = STATIC_PAGES_CONFIG;
+        console.log(`✅ 加载静态页面: ${staticPages.length} 条`);
+    }
+
+    // ========== 加载所有数据源 ==========
+    async function loadAllData() {
+        isLoading = true;
+        loadedCount = 0;
+        const statusDiv = document.getElementById('statusArea');
+        statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载数据源 (0/3)...';
+        
+        // 并行加载
+        const promises = [loadBlogs(), loadNotices()];
+        await Promise.all(promises);
+        loadStaticPages();
+        
+        isLoading = false;
+        statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇博客 + ${noticesData.length} 条通知 + ${staticPages.length} 个页面`;
+        setTimeout(() => {
+            if (statusDiv) statusDiv.style.display = 'none';
+        }, 2000);
+    }
+
+    // ========== 工具函数 ==========
     function stripHtml(html) {
         if (!html) return '';
         const tmp = document.createElement('div');
         tmp.innerHTML = html;
         return tmp.textContent || tmp.innerText || '';
-    }
-
-    function searchBlogs(keyword) {
-        if (!keyword || keyword.trim() === "") return [];
-        if (!blogsData.length) return [];
-        
-        const lowerKw = keyword.toLowerCase().trim();
-        const words = lowerKw.split(/\s+/).filter(w => w.length > 0);
-        if (words.length === 0) return [];
-
-        const results = [];
-        for (const item of blogsData) {
-            let relevance = 0;
-            const typeLow = (item.type || "").toLowerCase();
-            const titleLow = (item.title || "").toLowerCase();
-            const bodyPlain = stripHtml(item.body || "").toLowerCase();
-            const tagsLow = (item.tags || []).map(t => t.toLowerCase()).join(" ");
-            const summaryLow = (item.summary || "").toLowerCase();
-
-            for (const w of words) {
-                if (titleLow.includes(w)) relevance += 15;
-                if (typeLow.includes(w)) relevance += 10;
-                if (tagsLow.includes(w)) relevance += 12;
-                if (bodyPlain.includes(w)) relevance += 6;
-                if (summaryLow.includes(w)) relevance += 5;
-                if (titleLow === w) relevance += 20;
-            }
-            if (relevance > 0) {
-                results.push({ ...item, relevance });
-            }
-        }
-        results.sort((a, b) => b.relevance - a.relevance);
-        return results;
     }
 
     function escapeHtml(str) {
@@ -411,66 +420,175 @@
         return result;
     }
 
-    function showFullContent(blog) {
+    // ========== 搜索所有数据源 ==========
+    function searchAll(keyword) {
+        if (!keyword || keyword.trim() === "") return [];
+        const lowerKw = keyword.toLowerCase().trim();
+        const words = lowerKw.split(/\s+/).filter(w => w.length > 0);
+        if (words.length === 0) return [];
+
+        const results = [];
+
+        // 1. 搜索博客 (blogs.json)
+        for (const item of blogsData) {
+            let relevance = 0;
+            const typeLow = (item.type || "").toLowerCase();
+            const titleLow = (item.title || "").toLowerCase();
+            const bodyPlain = stripHtml(item.body || "").toLowerCase();
+            const tagsLow = (item.tags || []).map(t => t.toLowerCase()).join(" ");
+            const summaryLow = (item.summary || "").toLowerCase();
+
+            for (const w of words) {
+                if (titleLow.includes(w)) relevance += 15;
+                if (typeLow.includes(w)) relevance += 10;
+                if (tagsLow.includes(w)) relevance += 12;
+                if (bodyPlain.includes(w)) relevance += 6;
+                if (summaryLow.includes(w)) relevance += 5;
+                if (titleLow === w) relevance += 20;
+            }
+            if (relevance > 0) {
+                results.push({
+                    type: "📝 博客",
+                    title: item.title,
+                    link: "#",
+                    content: item.body || item.summary || "",
+                    summary: item.summary || stripHtml(item.body || '').substring(0, 150),
+                    relevance: relevance,
+                    tags: item.tags || [],
+                    dataType: "blog",
+                    rawData: item
+                });
+            }
+        }
+
+        // 2. 搜索通知 (notices.json)
+        for (const item of noticesData) {
+            let relevance = 0;
+            const titleLow = (item.title || "").toLowerCase();
+            const contentLow = (item.content || "").toLowerCase();
+            const summaryLow = (item.summary || "").toLowerCase();
+
+            for (const w of words) {
+                if (titleLow.includes(w)) relevance += 15;
+                if (contentLow.includes(w)) relevance += 8;
+                if (summaryLow.includes(w)) relevance += 6;
+                if (titleLow === w) relevance += 20;
+            }
+            if (relevance > 0) {
+                results.push({
+                    type: "🔔 通知",
+                    title: item.title,
+                    link: "notice.html",
+                    content: item.content || item.summary || "",
+                    summary: item.summary || stripHtml(item.content || '').substring(0, 150),
+                    relevance: relevance,
+                    tags: [],
+                    dataType: "notice",
+                    rawData: item
+                });
+            }
+        }
+
+        // 3. 搜索静态页面
+        for (const item of staticPages) {
+            let relevance = 0;
+            const titleLow = (item.title || "").toLowerCase();
+            const contentLow = (item.content || "").toLowerCase();
+
+            for (const w of words) {
+                if (titleLow.includes(w)) relevance += 15;
+                if (contentLow.includes(w)) relevance += 10;
+                if (titleLow === w) relevance += 20;
+            }
+            if (relevance > 0) {
+                results.push({
+                    type: item.type,
+                    title: item.title,
+                    link: item.link,
+                    content: item.content,
+                    summary: item.summary,
+                    relevance: relevance,
+                    tags: [],
+                    dataType: "page",
+                    rawData: item
+                });
+            }
+        }
+
+        results.sort((a, b) => b.relevance - a.relevance);
+        return results;
+    }
+
+    // ========== 显示详情模态框 ==========
+    function showDetail(result) {
+        if (result.link && result.link !== "#") {
+            // 静态页面直接跳转
+            window.location.href = result.link;
+            return;
+        }
+        
+        // 博客或通知的模态框显示
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
         
         const card = document.createElement('div');
-        card.style.cssText = 'max-width:800px; width:100%; max-height:85vh; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:auto; padding:28px; color:#f0f3fa;';
+        card.style.cssText = 'max-width:700px; width:100%; max-height:85vh; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:auto; padding:28px; color:#f0f3fa;';
         
-        const tagsHtml = (blog.tags || []).map(tag => `<span style="background:rgba(255,215,0,0.2); padding:2px 12px; border-radius:20px; font-size:0.75rem; margin-right:8px;">#${escapeHtml(tag)}</span>`).join('');
+        let contentHtml = '';
+        if (result.dataType === 'blog' && result.rawData) {
+            const blog = result.rawData;
+            const tagsHtml = (blog.tags || []).map(t => `<span style="background:rgba(255,215,0,0.2); padding:2px 12px; border-radius:20px; font-size:0.75rem; margin-right:8px;">#${escapeHtml(t)}</span>`).join('');
+            contentHtml = `
+                <div style="margin-bottom:12px;">
+                    <span style="background:#FFD96630; padding:4px 12px; border-radius:40px;">📁 ${escapeHtml(blog.type)}</span>
+                </div>
+                <div style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:8px;">
+                    ${tagsHtml}
+                </div>
+                <div style="line-height:1.7; font-size:1rem;">${blog.body || '暂无正文内容'}</div>
+            `;
+        } else if (result.dataType === 'notice' && result.rawData) {
+            const notice = result.rawData;
+            contentHtml = `
+                <div class="modal-date">📅 ${escapeHtml(notice.date)}</div>
+                <div style="line-height:1.7; font-size:1rem;">${notice.content || '暂无详细内容'}</div>
+            `;
+        } else {
+            contentHtml = `<div style="line-height:1.7;">${escapeHtml(result.content)}</div>`;
+        }
         
         card.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid rgba(255,255,150,0.3); padding-bottom:12px;">
-                <h2 style="color:#FFE6B0; margin:0;">${escapeHtml(blog.title)}</h2>
-                <button id="closeModalBtn" style="background:rgba(255,255,255,0.2); border:none; font-size:1.5rem; cursor:pointer; color:#fff; border-radius:40px; width:40px; height:40px;">✕</button>
+                <h2 style="color:#FFE6B0; margin:0;">${escapeHtml(result.title)}</h2>
+                <button class="modal-close-btn" style="background:rgba(255,255,255,0.2); border:none; font-size:1.5rem; cursor:pointer; color:#fff; border-radius:40px; width:40px; height:40px;">✕</button>
             </div>
-            <div style="margin-bottom:12px;">
-                <span style="background:#FFD96630; padding:4px 12px; border-radius:40px;">📁 ${escapeHtml(blog.type)}</span>
-            </div>
-            <div style="margin-bottom:20px; display:flex; flex-wrap:wrap; gap:8px;">
-                ${tagsHtml}
-            </div>
-            <div style="line-height:1.7; font-size:1rem;">${blog.body || '暂无正文内容'}</div>
+            ${contentHtml}
         `;
         
         modal.appendChild(card);
         document.body.appendChild(modal);
         
-        const closeBtn = document.getElementById('closeModalBtn');
+        const closeBtn = card.querySelector('.modal-close-btn');
         if (closeBtn) closeBtn.onclick = () => modal.remove();
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     }
 
+    // ========== 渲染搜索结果 ==========
     async function renderResults(keyword) {
         const resultsList = document.getElementById('resultsList');
         const resultsArea = document.getElementById('resultsArea');
-        const statusDiv = document.getElementById('statusArea');
         
         if (!resultsList) return;
-        if (!dataLoaded && blogsData.length === 0) await loadBlogsData();
-        
-        if (!blogsData.length) {
-            if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) {
-                statusDiv.innerHTML = '❌ 无法加载博客数据，请检查 resource/blogs.json 文件是否存在';
-                statusDiv.className = 'status-area error';
-            }
-            resultsList.innerHTML = '<div class="no-result">🥔 无法加载数据，请刷新页面重试</div>';
-            resultsArea.style.display = 'block';
-            return;
-        }
-        
-        if (statusDiv && !statusDiv.innerHTML.includes('加载失败')) statusDiv.style.display = 'none';
         
         if (!keyword || keyword.trim() === "") {
-            resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索博客内容</div>';
+            resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索（可搜索博客、通知、页面）</div>';
             resultsArea.style.display = 'block';
             return;
         }
 
-        const results = searchBlogs(keyword);
+        const results = searchAll(keyword);
         if (results.length === 0) {
-            resultsList.innerHTML = `<div class="no-result">🥔 没有找到关于 “${escapeHtml(keyword)}” 的内容<br>试试其他关键词如：C++、DeepSeek、Blender、测试</div>`;
+            resultsList.innerHTML = `<div class="no-result">🥔 没有找到关于 “${escapeHtml(keyword)}” 的内容<br>试试：关于本站、PotatoCPPApp、Blender、搜索功能</div>`;
             resultsArea.style.display = 'block';
             return;
         }
@@ -478,14 +596,12 @@
         let html = '';
         for (let i = 0; i < results.length; i++) {
             const item = results[i];
-            const previewText = item.summary || stripHtml(item.body || '').substring(0, 120);
+            const previewText = item.summary || stripHtml(item.content || '').substring(0, 120);
             html += `
                 <div class="result-item" data-index="${i}">
-                    <div class="result-type">📁 ${highlightText(item.type, keyword)}</div>
+                    <div class="result-type">${item.type}</div>
                     <div class="result-title">${highlightText(item.title, keyword)}</div>
-                    <div class="result-tags">
-                        ${(item.tags || []).map(tag => `<span class="tag">${highlightText(tag, keyword)}</span>`).join('')}
-                    </div>
+                    ${item.tags && item.tags.length ? `<div class="result-tags">${item.tags.map(tag => `<span class="tag">${highlightText(tag, keyword)}</span>`).join('')}</div>` : ''}
                     <div class="result-preview">${highlightText(previewText, keyword)}${previewText.length >= 120 ? '...' : ''}</div>
                 </div>
             `;
@@ -496,11 +612,14 @@
         document.querySelectorAll('.result-item').forEach(el => {
             el.addEventListener('click', () => {
                 const idx = parseInt(el.getAttribute('data-index'));
-                if (!isNaN(idx) && results[idx]) showFullContent(results[idx]);
+                if (!isNaN(idx) && results[idx]) {
+                    showDetail(results[idx]);
+                }
             });
         });
     }
 
+    // ========== 执行搜索 + URL 更新 ==========
     async function performSearch() {
         const input = document.getElementById('searchInput');
         const keyword = input ? input.value.trim() : '';
@@ -523,10 +642,11 @@
         window.history.replaceState({}, '', url.toString());
     }
 
+    // ========== 初始化 ==========
     async function init() {
-        await loadBlogsData();
+        await loadAllData();
         
-        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('submitSearchBtn').addEventListener('click', performSearch);
         document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
         document.getElementById('searchIconBtn').addEventListener('click', performSearch);
         document.getElementById('searchInput').addEventListener('keypress', (e) => {
