@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potatos 内容管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* 登录界面 */
+        .login-box {
+            max-width: 400px;
+            margin: 100px auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .login-box h2 { color: #FFE6B0; margin-bottom: 24px; }
+        .github-login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: #24292e;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .github-login-btn:hover {
+            background: #2c3e50;
+            transform: translateY(-2px);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 40px;
+        }
+        .user-info img { width: 32px; height: 32px; border-radius: 50%; }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* 管理界面 */
+        .admin-panel { display: none; }
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 40px;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #FFD966;
+            color: #1a1a2e;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card h3 { color: #FFE6B0; margin-bottom: 16px; }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            color: white;
+        }
+        textarea { min-height: 150px; }
+        button {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #FFD966, #F4B942);
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.danger { background: #dc3545; color: white; }
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .list-item {
+            background: rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .list-item .title { font-weight: bold; color: #FFE6B0; }
+        .status {
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+        .status.success { background: rgba(40,167,69,0.3); color: #90EE90; display: block; }
+        .status.error { background: rgba(220,53,69,0.3); color: #FF8888; display: block; }
+        .status.loading { background: rgba(255,217,102,0.3); color: #FFE6B0; display: block; }
+        
+        /* 白名单管理 */
+        .whitelist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 登录界面 -->
+    <div id="loginBox" class="login-box">
+        <h2>🔐 Potatos 管理后台</h2>
+        <p style="color:#ccc; margin-bottom:24px;">请使用 GitHub 账号登录</p>
+        <a href="#" id="githubLoginBtn" class="github-login-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.26.82-.58 0-.287-.01-1.05-.015-2.06-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.082-.73.082-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.468-2.38 1.235-3.22-.123-.3-.535-1.52.117-3.16 0 0 1.008-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.29-1.552 3.297-1.23 3.297-1.23.653 1.64.24 2.86.118 3.16.768.84 1.233 1.91 1.233 3.22 0 4.61-2.804 5.62-5.476 5.92.43.37.824 1.102.824 2.22 0 1.602-.015 2.894-.015 3.287 0 .322.216.698.83.578C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            Sign in with GitHub
+        </a>
+        <div id="loginError" class="error" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- 管理界面 -->
+    <div id="adminPanel" class="admin-panel">
+        <div class="user-info" id="userInfo">
+            <img id="userAvatar" src="">
+            <span id="userName"></span>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="blogs">📝 博客管理</button>
+            <button class="tab-btn" data-tab="notices">🔔 通知管理</button>
+            <button class="tab-btn" data-tab="whitelist">👥 授权用户</button>
+        </div>
+        
+        <!-- 博客管理 -->
+        <div id="tab-blogs" class="tab-content active">
+            <div class="card">
+                <h3>➕ 添加博客</h3>
+                <input type="text" id="blogTitle" placeholder="标题">
+                <select id="blogType">
+                    <option value="技术笔记">技术笔记</option>
+                    <option value="日志">日志</option>
+                    <option value="AI探索">AI探索</option>
+                    <option value="赛博日志">赛博日志</option>
+                </select>
+                <input type="text" id="blogTags" placeholder="标签 (逗号分隔)">
+                <textarea id="blogBody" placeholder="正文 (HTML)"></textarea>
+                <input type="text" id="blogSummary" placeholder="摘要">
+                <button onclick="addBlog()">✨ 添加博客</button>
+            </div>
+            <div class="card">
+                <h3>📖 现有博客</h3>
+                <div id="blogList" class="item-list">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 通知管理 -->
+        <div id="tab-notices" class="tab-content">
+            <div class="card">
+                <h3>➕ 添加通知</h3>
+                <input type="text" id="noticeTitle" placeholder="标题">
+                <input type="text" id="noticeIcon" placeholder="图标 (如: 🎉)">
+                <textarea id="noticeContent" placeholder="内容"></textarea>
+                <input type="text" id="noticeSummary" placeholder="摘要">
+                <button onclick="addNotice()">🔔 添加通知</button>
+            </div>
+            <div class="card">
+                <h3>📋 现有通知</h3>
+                <div id="noticeList" class="item-list">加载中...</div>
+            </div>
+        </div>
+        
+        <!-- 授权用户管理 -->
+        <div id="tab-whitelist" class="tab-content">
+            <div class="card">
+                <h3>👥 授权 GitHub 用户</h3>
+                <p style="color:#aaa; margin-bottom:16px;">只有白名单中的用户才能登录管理后台。</p>
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <input type="text" id="whitelistUser" placeholder="GitHub 用户名" style="flex:1;">
+                    <button onclick="addToWhitelist()">添加</button>
+                </div>
+                <div id="whitelistList"></div>
+                <p style="color:#aaa; font-size:12px; margin-top:16px;">当前登录用户自动拥有权限。</p>
+            </div>
+        </div>
+        
+        <div id="statusMsg" class="status"></div>
+    </div>
+</div>
+
+<script>
+    // ========== 配置 ==========
+    const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";  // 替换为你的 OAuth App Client ID
+    const ADMIN_REPO = "hipp-tu/potatos";       // 当前仓库
+    
+    // 白名单（GitHub 用户名）
+    let whitelist = ["hipp-tu"];  // 默认包含你自己
+    
+    // 全局数据
+    let blogsData = [];
+    let noticesData = [];
+    let currentUser = null;
+    
+    // ========== OAuth 登录 ==========
+    function getGitHubOAuthURL() {
+        const redirectUri = `${window.location.origin}${window.location.pathname}`;
+        return `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=read:user`;
+    }
+    
+    // 处理 OAuth 回调
+    async function handleOAuthCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            // 清除 URL 参数
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // 验证用户
+            await verifyUser(code);
+        }
+    }
+    
+    async function verifyUser(code) {
+        showStatus('验证中...', 'loading');
+        try {
+            // 通过后端代理验证（GitHub Pages 不能直接使用 client_secret）
+            // 这里使用 GitHub 公开 API 获取用户信息，然后验证是否在白名单中
+            const tokenResponse = await fetch('https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    client_id: GITHUB_CLIENT_ID,
+                    client_secret: '', // 注意：这需要后端支持，实际应使用代理
+                    code: code
+                })
+            });
+            // 由于 GitHub Pages 不能安全使用 client_secret，改用另一种方式：
+            // 直接使用 GitHub 登录后跳转回来的用户信息
+            // 简化方案：通过 GitHub API 获取当前用户
+            const userResponse = await fetch('https://api.github.com/user', {
+                headers: { 'Authorization': `Bearer ${code}` }
+            });
+            if (userResponse.ok) {
+                const user = await userResponse.json();
+                if (whitelist.includes(user.login)) {
+                    currentUser = user;
+                    localStorage.setItem('github_user', JSON.stringify(user));
+                    showAdminPanel();
+                } else {
+                    document.getElementById('loginError').innerText = '您没有权限访问此后台';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('loginError').innerText = '登录失败，请重试';
+        }
+    }
+    
+    // 简化版：使用 localStorage 存储登录状态（首次需手动确认）
+    function checkLocalAuth() {
+        const savedUser = localStorage.getItem('github_user');
+        if (savedUser) {
+            currentUser = JSON.parse(savedUser);
+            if (whitelist.includes(currentUser.login)) {
+                showAdminPanel();
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    function showAdminPanel() {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('userName').innerText = currentUser?.login || '管理员';
+        if (currentUser?.avatar_url) {
+            document.getElementById('userAvatar').src = currentUser.avatar_url;
+        }
+        loadAllData();
+        loadWhitelist();
+    }
+    
+    function logout() {
+        localStorage.removeItem('github_user');
+        currentUser = null;
+        document.getElementById('loginBox').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+    
+    // ========== 数据加载 ==========
+    async function fetchFromGitHub(path) {
+        const url = `https://raw.githubusercontent.com/${ADMIN_REPO}/main/${path}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    }
+    
+    async function saveToGitHub(path, data) {
+        // 通过 GitHub API 写入文件（需要 Token）
+        const token = prompt('请输入 GitHub Personal Access Token 以保存更改（需要 repo 权限）');
+        if (!token) return false;
+        
+        const url = `https://api.github.com/repos/${ADMIN_REPO}/contents/${path}`;
+        // 先获取当前文件的 SHA
+        const getResponse = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        let sha = '';
+        if (getResponse.ok) {
+            const fileData = await getResponse.json();
+            sha = fileData.sha;
+        }
+        
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+        const putResponse = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: `Update ${path} from admin`,
+                content: content,
+                sha: sha
+            })
+        });
+        return putResponse.ok;
+    }
+    
+    async function loadAllData() {
+        try {
+            blogsData = await fetchFromGitHub('resource/blogs.json');
+            noticesData = await fetchFromGitHub('resource/notices.json');
+            renderBlogList();
+            renderNoticeList();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    
+    // ========== 渲染函数 ==========
+    function renderBlogList() {
+        const container = document.getElementById('blogList');
+        if (!blogsData.length) {
+            container.innerHTML = '<div style="color:#aaa;">暂无博客</div>';
+            return;
+        }
+        let html = '';
+        blogsData.forEach((blog, idx) => {
+            html += `
+                <div class="list-item">
+                    <div><div class="title">${escapeHtml(blog.title)}</div><div style="font-size:12px;">${blog.type}</div></div>
+                    <div><button class="danger" onclick="deleteBlog(${idx})">删除</button></div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    function renderNoticeList() {
+        const container = document.getElementById('noticeList');
+        if (!noticesData.length) {
+            container.innerHTML = '<div style="color:#aaa;">暂无通知</div>';
+            return;
+        }
+        let html = '';
+        noticesData.forEach((notice, idx) => {
+            html += `
+                <div class="list-item">
+                    <div><div class="title">${notice.icon || '🔔'} ${escapeHtml(notice.title)}</div><div style="font-size:12px;">${notice.date}</div></div>
+                    <div><button class="danger" onclick="deleteNotice(${idx})">删除</button></div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    function renderWhitelist() {
+        const container = document.getElementById('whitelistList');
+        let html = '';
+        whitelist.forEach(user => {
+            html += `
+                <div class="whitelist-item">
+                    <span>${escapeHtml(user)}</span>
+                    <button class="danger" style="padding:4px 12px;" onclick="removeFromWhitelist('${user}')">移除</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+    
+    // ========== CRUD 操作 ==========
+    async function addBlog() {
+        const newBlog = {
+            type: document.getElementById('blogType').value,
+            tags: document.getElementById('blogTags').value.split(',').map(t => t.trim()),
+            title: document.getElementById('blogTitle').value,
+            cover: "resource/blog_cover.png",
+            body: document.getElementById('blogBody').value,
+            summary: document.getElementById('blogSummary').value
+        };
+        if (!newBlog.title || !newBlog.body) { alert('标题和正文不能为空'); return; }
+        
+        blogsData.push(newBlog);
+        const success = await saveToGitHub('resource/blogs.json', blogsData);
+        if (success) {
+            showStatus('博客添加成功', 'success');
+            renderBlogList();
+            clearBlogForm();
+        } else {
+            showStatus('保存失败', 'error');
+        }
+    }
+    
+    function deleteBlog(idx) {
+        if (confirm(`删除「${blogsData[idx].title}」？`)) {
+            blogsData.splice(idx, 1);
+            saveToGitHub('resource/blogs.json', blogsData);
+            renderBlogList();
+        }
+    }
+    
+    async function addNotice() {
+        const newNotice = {
+            id: Date.now(),
+            title: document.getElementById('noticeTitle').value,
+            icon: document.getElementById('noticeIcon').value || '🔔',
+            date: new Date().toISOString().split('T')[0],
+            summary: document.getElementById('noticeSummary').value,
+            content: document.getElementById('noticeContent').value
+        };
+        if (!newNotice.title) { alert('标题不能为空'); return; }
+        
+        noticesData.push(newNotice);
+        const success = await saveToGitHub('resource/notices.json', noticesData);
+        if (success) {
+            showStatus('通知添加成功', 'success');
+            renderNoticeList();
+            clearNoticeForm();
+        }
+    }
+    
+    function deleteNotice(idx) {
+        if (confirm(`删除「${noticesData[idx].title}」？`)) {
+            noticesData.splice(idx, 1);
+            saveToGitHub('resource/notices.json', noticesData);
+            renderNoticeList();
+        }
+    }
+    
+    function addToWhitelist() {
+        const user = document.getElementById('whitelistUser').value.trim();
+        if (user && !whitelist.includes(user)) {
+            whitelist.push(user);
+            renderWhitelist();
+            document.getElementById('whitelistUser').value = '';
+            saveWhitelist();
+        }
+    }
+    
+    function removeFromWhitelist(user) {
+        whitelist = whitelist.filter(u => u !== user);
+        renderWhitelist();
+        saveWhitelist();
+    }
+    
+    async function saveWhitelist() {
+        await saveToGitHub('admin/whitelist.json', whitelist);
+    }
+    
+    async function loadWhitelist() {
+        try {
+            const data = await fetchFromGitHub('admin/whitelist.json');
+            if (Array.isArray(data)) whitelist = data;
+        } catch (err) {
+            // 文件不存在，使用默认
+        }
+        renderWhitelist();
+    }
+    
+    // ========== 辅助函数 ==========
+    function showStatus(msg, type) {
+        const div = document.getElementById('statusMsg');
+        div.className = `status ${type}`;
+        div.innerHTML = msg;
+        setTimeout(() => div.className = 'status', 3000);
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    }
+    
+    function clearBlogForm() {
+        document.getElementById('blogTitle').value = '';
+        document.getElementById('blogTags').value = '';
+        document.getElementById('blogBody').value = '';
+        document.getElementById('blogSummary').value = '';
+    }
+    
+    function clearNoticeForm() {
+        document.getElementById('noticeTitle').value = '';
+        document.getElementById('noticeIcon').value = '';
+        document.getElementById('noticeContent').value = '';
+        document.getElementById('noticeSummary').value = '';
+    }
+    
+    // ========== 初始化 ==========
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+        });
+    });
+    
+    // 设置登录链接
+    document.getElementById('githubLoginBtn').href = getGitHubOAuthURL();
+    
+    // 检查是否已登录
+    if (!checkLocalAuth()) {
+        handleOAuthCallback();
+    }
+</script>
+</body>
+</html>
