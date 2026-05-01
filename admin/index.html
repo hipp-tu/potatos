@@ -417,7 +417,7 @@
         } else showMessage('添加失败', true);
     }
 
-    // ========== 弹窗 OAuth + 跨窗口通信 ==========
+    // ✅ 自动关窗 + 父页面自动登录
     function openOAuthPopup() {
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
         const popup = window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
@@ -425,16 +425,16 @@
             loginErrorMsg.innerText = '请允许弹出窗口';
             return;
         }
-        // 监听弹窗关闭事件 (用户操作完成后手动关)
-        const checkClosed = setInterval(() => {
-            if (popup.closed) {
-                clearInterval(checkClosed);
-                // 弹窗关掉后重新检查 URL 是否有 code（弹窗自己会跳回，但父页面的 URL 不会被改）
-                const urlParams = new URLSearchParams(window.location.search);
-                const code = urlParams.get('code');
-                if (code) handleCode(code);
+
+        // 监听 window 消息（弹窗会主动发消息）
+        window.addEventListener('message', async function handler(event) {
+            if (event.origin !== window.location.origin) return;
+            if (event.data?.type === 'github_oauth_code') {
+                window.removeEventListener('message', handler);
+                await handleCode(event.data.code);
+                popup.close();
             }
-        }, 300);
+        });
     }
 
     async function exchangeCode(code) {
@@ -500,11 +500,7 @@
             } catch(e) {}
             localStorage.removeItem('admin_token');
         }
-        // 检查当前页面 URL 中是否已经有 code（来自弹窗跳转）
-        const urlCode = new URLSearchParams(window.location.search).get('code');
-        if (urlCode) {
-            await handleCode(urlCode);
-        }
+
         document.getElementById('popupLoginBtn').addEventListener('click', openOAuthPopup);
     }
 
@@ -514,6 +510,15 @@
     document.getElementById('addNoticeBtn')?.addEventListener('click', addNotice);
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     init();
+</script>
+
+<!-- 弹窗内部脚本：自动向父窗口发送 code，然后关闭 -->
+<script id="popupScript" style="display: none;">
+    if (window.opener && window.location.search.includes('code=')) {
+        const code = new URLSearchParams(window.location.search).get('code');
+        window.opener.postMessage({ type: 'github_oauth_code', code }, window.opener.location.origin);
+        window.close();
+    }
 </script>
 </body>
 </html>
