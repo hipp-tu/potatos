@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Potatos. - 管理中心</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potatos. - 管理页面</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             background: url('../resource/admin_background.png') no-repeat center center fixed;
             background-size: cover;
@@ -179,7 +179,6 @@
             color: white;
             padding: 12px 28px;
             border-radius: 40px;
-            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 12px;
@@ -267,7 +266,6 @@
 </div>
 
 <script>
-    // ================= 终章配置 =================
     const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";
     const REDIRECT_URI = window.location.href.split('?')[0];
     const REPO_OWNER = "hipp-tu";
@@ -419,9 +417,24 @@
         } else showMessage('添加失败', true);
     }
 
+    // ========== 弹窗 OAuth + 跨窗口通信 ==========
     function openOAuthPopup() {
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-        window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
+        const popup = window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
+        if (!popup) {
+            loginErrorMsg.innerText = '请允许弹出窗口';
+            return;
+        }
+        // 监听弹窗关闭事件 (用户操作完成后手动关)
+        const checkClosed = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkClosed);
+                // 弹窗关掉后重新检查 URL 是否有 code（弹窗自己会跳回，但父页面的 URL 不会被改）
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                if (code) handleCode(code);
+            }
+        }, 300);
     }
 
     async function exchangeCode(code) {
@@ -436,6 +449,16 @@
         });
         const text = await res.text();
         return new URLSearchParams(text).get("access_token");
+    }
+
+    async function handleCode(code) {
+        const token = await exchangeCode(code);
+        if (!token) {
+            loginErrorMsg.innerText = '授权失败';
+            return;
+        }
+        await finishLogin(token);
+        window.history.replaceState({}, '', window.location.pathname);
     }
 
     async function finishLogin(token) {
@@ -455,19 +478,6 @@
         adminApp.style.display = 'block';
         await loadAllData();
         return true;
-    }
-
-    async function handlePopupCallback() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        if (!code) return;
-        window.history.replaceState({}, '', window.location.pathname);
-        const token = await exchangeCode(code);
-        if (!token) {
-            loginErrorMsg.innerText = '授权失败，请重试';
-            return;
-        }
-        await finishLogin(token);
     }
 
     function logout() {
@@ -490,7 +500,11 @@
             } catch(e) {}
             localStorage.removeItem('admin_token');
         }
-        await handlePopupCallback();
+        // 检查当前页面 URL 中是否已经有 code（来自弹窗跳转）
+        const urlCode = new URLSearchParams(window.location.search).get('code');
+        if (urlCode) {
+            await handleCode(urlCode);
+        }
         document.getElementById('popupLoginBtn').addEventListener('click', openOAuthPopup);
     }
 
