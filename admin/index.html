@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Potatos 管理后台</title>
+    <title>Potatos 管理中心</title>
     <style>
         * {
             margin: 0;
@@ -20,14 +20,14 @@
             position: relative;
         }
 
-        /* 半透明遮罩，让背景柔和 */
+        /* 柔和遮罩 */
         .overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(2px);
             z-index: 0;
         }
@@ -41,22 +41,19 @@
 
         /* 卡片样式 */
         .glass-card {
-            background: rgba(255, 255, 255, 0.96);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
             border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             overflow: hidden;
         }
 
-        /* 头部 */
         .admin-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 16px 28px;
             background: rgba(255, 255, 255, 0.92);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             margin-bottom: 32px;
             border-radius: 28px;
         }
@@ -74,7 +71,6 @@
 
         .brand h1 {
             font-size: 1.5rem;
-            font-weight: 700;
             background: linear-gradient(135deg, #c2410c, #f59e0b);
             background-clip: text;
             -webkit-background-clip: text;
@@ -105,7 +101,6 @@
             cursor: pointer;
         }
 
-        /* 网格卡片区 */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -119,7 +114,6 @@
             border-radius: 28px;
             padding: 24px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.2s;
         }
 
         .card-title {
@@ -139,7 +133,6 @@
             border: 1px solid #e2e8f0;
             border-radius: 20px;
             font-size: 0.9rem;
-            transition: 0.2s;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -191,7 +184,7 @@
             backdrop-filter: blur(8px);
         }
 
-        .github-btn {
+        .github-login-btn {
             background: #24292e;
             color: white;
             padding: 12px 28px;
@@ -201,6 +194,9 @@
             align-items: center;
             gap: 12px;
             margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .status-msg {
@@ -219,16 +215,14 @@
 <body>
 <div class="overlay"></div>
 <div class="admin-wrapper">
-    <!-- 登录界面 -->
-    <div id="loginPanel" class="login-container" style="display: block;">
+    <div id="loginPanel" class="login-container">
         <img src="resource/admin.png" alt="admin" style="width: 80px; margin-bottom: 16px;">
         <h2>Potatos 管理中枢</h2>
-        <p style="margin: 8px 0 16px; color: #334155;">使用 GitHub 账号验证身份</p>
-        <a id="githubLoginBtn" class="github-btn" href="#">🔑 继续使用 GitHub 登录</a>
+        <p style="margin: 8px 0 16px;">使用 GitHub 账号验证</p>
+        <button id="popupLoginBtn" class="github-login-btn">🔑 新窗口登录 GitHub</button>
         <div id="loginErrorMsg" style="color:#b91c1c; margin-top: 20px;"></div>
     </div>
 
-    <!-- 管理界面 -->
     <div id="adminApp" style="display: none;">
         <div class="admin-header">
             <div class="brand">
@@ -253,7 +247,7 @@
                     <option value="赛博日志">赛博日志</option>
                 </select>
                 <input type="text" id="blogTags" placeholder="标签 (逗号分隔)">
-                <textarea id="blogBody" rows="5" placeholder="正文 (支持HTML)"></textarea>
+                <textarea id="blogBody" rows="5" placeholder="正文 (HTML)"></textarea>
                 <input type="text" id="blogSummary" placeholder="摘要">
                 <button id="addBlogBtn">✨ 立即发布</button>
             </div>
@@ -283,8 +277,8 @@
 </div>
 
 <script>
-    // ========= 配置 =========
-    const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";   // 替换成你自己的
+    // ================= 配置区 =================
+    const GITHUB_CLIENT_ID = "你的_OAuth_Client_ID";   // 替换为真实 Client ID
     const REDIRECT_URI = window.location.href.split('?')[0];
     const REPO_OWNER = "hipp-tu";
     const REPO_NAME = "potatos";
@@ -434,7 +428,15 @@
         } else showMessage('添加失败', true);
     }
 
-    // OAuth 流程
+    // 新窗口 OAuth 流程
+    function openOAuthPopup() {
+        const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
+        const popup = window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
+        if (!popup) {
+            loginErrorMsg.innerText = '请允许弹出窗口，再点击登录';
+        }
+    }
+
     async function exchangeCode(code) {
         const proxy = "https://cors-anywhere.herokuapp.com/";
         const res = await fetch(proxy + "https://github.com/login/oauth/access_token", {
@@ -465,13 +467,18 @@
         return true;
     }
 
-    async function handleCallback() {
-        const code = new URLSearchParams(window.location.search).get('code');
+    async function handlePopupCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
         if (!code) return;
-        const token = await exchangeCode(code);
-        if (!token) { loginErrorMsg.innerText = '授权失败，请重试'; return; }
-        await finishLogin(token);
+        // 清除 URL 参数，避免刷新重复处理
         window.history.replaceState({}, '', window.location.pathname);
+        const token = await exchangeCode(code);
+        if (!token) {
+            loginErrorMsg.innerText = '授权失败，请重试';
+            return;
+        }
+        await finishLogin(token);
     }
 
     function logout() {
@@ -494,9 +501,8 @@
             } catch(e) {}
             localStorage.removeItem('admin_token');
         }
-        await handleCallback();
-        const loginUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-        document.getElementById('githubLoginBtn').href = loginUrl;
+        await handlePopupCallback();
+        document.getElementById('popupLoginBtn').addEventListener('click', openOAuthPopup);
     }
 
     function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
