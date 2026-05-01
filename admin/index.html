@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Potatos. - 管理页面</title>
     <style>
         * {
@@ -74,13 +74,6 @@
             background: #f1f5f9;
             padding: 6px 20px;
             border-radius: 60px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid #f59e0b;
         }
 
         .logout-btn {
@@ -174,18 +167,20 @@
             backdrop-filter: blur(8px);
         }
 
-        .github-login-btn {
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 1rem;
+        }
+
+        .login-btn {
             background: #24292e;
-            color: white;
-            padding: 12px 28px;
-            border-radius: 40px;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 20px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
+            width: 100%;
+            justify-content: center;
         }
 
         .status-msg {
@@ -204,14 +199,19 @@
 <body>
 <div class="overlay"></div>
 <div class="admin-wrapper">
+    <!-- 登录界面 -->
     <div id="loginPanel" class="login-container">
         <img src="../resource/admin.png" alt="admin" style="width: 80px; margin-bottom: 16px;">
         <h2>Potatos 管理中枢</h2>
-        <p style="margin: 8px 0 16px;">使用 GitHub 账号验证</p>
-        <button id="popupLoginBtn" class="github-login-btn">🔑 新窗口登录 GitHub</button>
-        <div id="loginErrorMsg" style="color:#b91c1c; margin-top: 20px;"></div>
+        <p style="margin: 8px 0 16px; color: #475569;">请输入管理密码</p>
+        <div class="login-box">
+            <input type="password" id="passwordInput" placeholder="密码" autocomplete="off">
+            <button id="loginBtn" class="login-btn">🔐 登录</button>
+            <div id="loginErrorMsg" style="color:#b91c1c; margin-top: 16px;"></div>
+        </div>
     </div>
 
+    <!-- 管理界面 -->
     <div id="adminApp" style="display: none;">
         <div class="admin-header">
             <div class="brand">
@@ -219,8 +219,7 @@
                 <h1>Potatos · 赛博实验室</h1>
             </div>
             <div class="user-area">
-                <img id="userAvatar" class="user-avatar" src="" alt="avatar">
-                <span id="userNameDisplay"></span>
+                <span>管理员</span>
                 <button id="logoutBtn" class="logout-btn">退出</button>
             </div>
         </div>
@@ -266,14 +265,24 @@
 </div>
 
 <script>
-    const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";
-    const REDIRECT_URI = window.location.href.split('?')[0];
+    // ================= 密码哈希验证（防君子不防小人） =================
+    // 密码 "hipp_tu114514" 的 SHA-256 哈希值
+    const PASSWORD_HASH = "b087017cc9269f477ba6954969cd68a96c8521541c961c30bf99c2804dbb94a9";
+    
+    // 实测密码 "hipp_tu114514" 的 SHA256 哈希值（预计算）
+    // 你也可以用这个在线工具验证：https://emn178.github.io/online-tools/sha256.html
+    async function hashPassword(password) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // GitHub API 配置
     const REPO_OWNER = "hipp-tu";
     const REPO_NAME = "potatos";
-    const ALLOWED_USERS = ["hipp-tu"];
-
-    let oauthToken = null;
-    let currentUser = null;
+    let githubToken = null;
     let blogsData = [];
     let noticesData = [];
 
@@ -290,24 +299,72 @@
         setTimeout(() => globalStatus.style.display = 'none', 3000);
     }
 
-    async function fetchJSON(path) {
-        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}`;
-        const res = await fetch(url);
-        return res.ok ? res.json() : null;
+    // 登录验证
+    async function login() {
+        const password = document.getElementById('passwordInput').value;
+        if (!password) {
+            loginErrorMsg.innerText = '请输入密码';
+            return;
+        }
+        const hash = await hashPassword(password);
+        if (hash === PASSWORD_HASH) {
+            // 密码正确，进入后台
+            loginPanel.style.display = 'none';
+            adminApp.style.display = 'block';
+            loadAllData();
+            // 可选：保存登录状态到 session（刷新页面会失效，更安全）
+            sessionStorage.setItem('admin_logged_in', 'true');
+        } else {
+            loginErrorMsg.innerText = '密码错误';
+        }
     }
 
-    async function writeToRepo(path, data) {
+    // 检查登录状态
+    function checkAuth() {
+        if (sessionStorage.getItem('admin_logged_in') === 'true') {
+            loginPanel.style.display = 'none';
+            adminApp.style.display = 'block';
+            loadAllData();
+        }
+    }
+
+    function logout() {
+        sessionStorage.removeItem('admin_logged_in');
+        loginPanel.style.display = 'block';
+        adminApp.style.display = 'none';
+        document.getElementById('passwordInput').value = '';
+    }
+
+    // GitHub 操作（复用之前的逻辑，但需要用户先配置 Token）
+    async function fetchWithToken(path) {
+        // 首次进入时要求输入 Token（一次性）
+        if (!githubToken) {
+            githubToken = prompt('请输入 GitHub Personal Access Token (需要 repo 权限)\n生成地址: https://github.com/settings/tokens');
+            if (!githubToken) return null;
+        }
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${githubToken}` } });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return JSON.parse(atob(data.content));
+    }
+
+    async function writeWithToken(path, contentData) {
+        if (!githubToken) {
+            githubToken = prompt('请输入 GitHub Token');
+            if (!githubToken) return false;
+        }
         const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
         let sha = '';
         try {
-            const getRes = await fetch(url, { headers: { 'Authorization': `Bearer ${oauthToken}` } });
+            const getRes = await fetch(url, { headers: { 'Authorization': `Bearer ${githubToken}` } });
             if (getRes.ok) sha = (await getRes.json()).sha;
         } catch(e) {}
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(contentData, null, 2))));
         const putRes = await fetch(url, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${oauthToken}`,
+                'Authorization': `Bearer ${githubToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ message: `admin 更新 ${path}`, content, sha })
@@ -316,12 +373,16 @@
     }
 
     async function loadAllData() {
-        const blogs = await fetchJSON('resource/blogs.json');
-        const notices = await fetchJSON('resource/notices.json');
-        if (blogs) blogsData = blogs;
-        if (notices) noticesData = notices;
-        renderBlogs();
-        renderNotices();
+        try {
+            const blogsRaw = await fetchWithToken('resource/blogs.json');
+            const noticesRaw = await fetchWithToken('resource/notices.json');
+            if (blogsRaw) blogsData = blogsRaw;
+            if (noticesRaw) noticesData = noticesRaw;
+            renderBlogs();
+            renderNotices();
+        } catch (e) {
+            showMessage('加载失败，请检查 Token', true);
+        }
     }
 
     function renderBlogs() {
@@ -352,7 +413,7 @@
             const idx = parseInt(blogBtn.dataset.blogIndex);
             if (confirm(`删除「${blogsData[idx].title}」？`)) {
                 blogsData.splice(idx, 1);
-                if (await writeToRepo('resource/blogs.json', blogsData)) {
+                if (await writeWithToken('resource/blogs.json', blogsData)) {
                     renderBlogs();
                     showMessage('已删除');
                 } else showMessage('删除失败', true);
@@ -364,7 +425,7 @@
             const idx = parseInt(noticeBtn.dataset.noticeIndex);
             if (confirm(`删除「${noticesData[idx].title}」？`)) {
                 noticesData.splice(idx, 1);
-                if (await writeToRepo('resource/notices.json', noticesData)) {
+                if (await writeWithToken('resource/notices.json', noticesData)) {
                     renderNotices();
                     showMessage('通知已删除');
                 } else showMessage('删除失败', true);
@@ -385,7 +446,7 @@
             summary: document.getElementById('blogSummary').value
         };
         blogsData.push(newBlog);
-        if (await writeToRepo('resource/blogs.json', blogsData)) {
+        if (await writeWithToken('resource/blogs.json', blogsData)) {
             showMessage('博客发布成功');
             document.getElementById('blogTitle').value = '';
             document.getElementById('blogTags').value = '';
@@ -407,7 +468,7 @@
             content: document.getElementById('noticeContent').value
         };
         noticesData.push(newNotice);
-        if (await writeToRepo('resource/notices.json', noticesData)) {
+        if (await writeWithToken('resource/notices.json', noticesData)) {
             showMessage('通知已添加');
             document.getElementById('noticeTitle').value = '';
             document.getElementById('noticeIcon').value = '';
@@ -417,108 +478,15 @@
         } else showMessage('添加失败', true);
     }
 
-    // ✅ 自动关窗 + 父页面自动登录
-    function openOAuthPopup() {
-        const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-        const popup = window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
-        if (!popup) {
-            loginErrorMsg.innerText = '请允许弹出窗口';
-            return;
-        }
-
-        // 监听 window 消息（弹窗会主动发消息）
-        window.addEventListener('message', async function handler(event) {
-            if (event.origin !== window.location.origin) return;
-            if (event.data?.type === 'github_oauth_code') {
-                window.removeEventListener('message', handler);
-                await handleCode(event.data.code);
-                popup.close();
-            }
-        });
-    }
-
-    async function exchangeCode(code) {
-        const res = await fetch("https://github.com/login/oauth/access_token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                client_id: GITHUB_CLIENT_ID,
-                client_secret: "",
-                code: code
-            })
-        });
-        const text = await res.text();
-        return new URLSearchParams(text).get("access_token");
-    }
-
-    async function handleCode(code) {
-        const token = await exchangeCode(code);
-        if (!token) {
-            loginErrorMsg.innerText = '授权失败';
-            return;
-        }
-        await finishLogin(token);
-        window.history.replaceState({}, '', window.location.pathname);
-    }
-
-    async function finishLogin(token) {
-        const userRes = await fetch('https://api.github.com/user', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (!userRes.ok) throw new Error('获取用户失败');
-        const user = await userRes.json();
-        if (!ALLOWED_USERS.includes(user.login)) {
-            loginErrorMsg.innerText = `@${user.login} 没有管理权限`;
-            return false;
-        }
-        oauthToken = token;
-        currentUser = user;
-        localStorage.setItem('admin_token', token);
-        document.getElementById('userNameDisplay').innerText = user.login;
-        document.getElementById('userAvatar').src = user.avatar_url || '../resource/admin.png';
-        loginPanel.style.display = 'none';
-        adminApp.style.display = 'block';
-        await loadAllData();
-        return true;
-    }
-
-    function logout() {
-        localStorage.removeItem('admin_token');
-        window.location.replace(window.location.pathname);
-    }
-
-    async function init() {
-        const savedToken = localStorage.getItem('admin_token');
-        if (savedToken) {
-            try {
-                const userRes = await fetch('https://api.github.com/user', { headers: { 'Authorization': `Bearer ${savedToken}` } });
-                if (userRes.ok) {
-                    const user = await userRes.json();
-                    if (ALLOWED_USERS.includes(user.login)) {
-                        await finishLogin(savedToken);
-                        return;
-                    }
-                }
-            } catch(e) {}
-            localStorage.removeItem('admin_token');
-        }
-
-        document.getElementById('popupLoginBtn').addEventListener('click', openOAuthPopup);
-    }
-
     function escapeHtml(s) { return String(s || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 
+    document.getElementById('loginBtn')?.addEventListener('click', login);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('addBlogBtn')?.addEventListener('click', addBlog);
     document.getElementById('addNoticeBtn')?.addEventListener('click', addNotice);
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    init();
-</script>
+    document.getElementById('passwordInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
 
-<!-- 弹窗内部脚本：自动向父窗口发送 code，然后关闭 -->
-<script id="popupScript" style="display: none;">
-    if (window.opener && window.location.search.includes('code=')) {
-        const code = new URLSearchParams(window.location.search).get('code');
-        window.opener.postMessage({ type: 'github_oauth_code', code }, window.opener.location.origin);
-        window.close();
-    }
+    checkAuth();
 </script>
 </body>
 </html>
