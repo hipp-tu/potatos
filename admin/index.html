@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Potatos 管理中心</title>
+    <title>Potatos 管理中心 · 终章版</title>
     <style>
         * {
             margin: 0;
@@ -14,13 +14,12 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
-            background: url('resource/admin_background.png') no-repeat center center fixed;
+            background: url('../resource/admin_background.png') no-repeat center center fixed;
             background-size: cover;
             padding: 24px;
             position: relative;
         }
 
-        /* 柔和遮罩 */
         .overlay {
             position: fixed;
             top: 0;
@@ -37,15 +36,6 @@
             z-index: 2;
             max-width: 1400px;
             margin: 0 auto;
-        }
-
-        /* 卡片样式 */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            overflow: hidden;
         }
 
         .admin-header {
@@ -216,7 +206,7 @@
 <div class="overlay"></div>
 <div class="admin-wrapper">
     <div id="loginPanel" class="login-container">
-        <img src="resource/admin.png" alt="admin" style="width: 80px; margin-bottom: 16px;">
+        <img src="../resource/admin.png" alt="admin" style="width: 80px; margin-bottom: 16px;">
         <h2>Potatos 管理中枢</h2>
         <p style="margin: 8px 0 16px;">使用 GitHub 账号验证</p>
         <button id="popupLoginBtn" class="github-login-btn">🔑 新窗口登录 GitHub</button>
@@ -226,7 +216,7 @@
     <div id="adminApp" style="display: none;">
         <div class="admin-header">
             <div class="brand">
-                <img src="resource/admin.png" alt="logo">
+                <img src="../resource/admin.png" alt="logo">
                 <h1>Potatos · 赛博实验室</h1>
             </div>
             <div class="user-area">
@@ -277,8 +267,8 @@
 </div>
 
 <script>
-    // ================= 配置区 =================
-    const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";   // 替换为真实 Client ID
+    // ================= 终章配置 =================
+    const GITHUB_CLIENT_ID = "Ov23li8c3G9b35PI7yYu";
     const REDIRECT_URI = window.location.href.split('?')[0];
     const REPO_OWNER = "hipp-tu";
     const REPO_NAME = "potatos";
@@ -289,7 +279,6 @@
     let blogsData = [];
     let noticesData = [];
 
-    // DOM 元素
     const loginPanel = document.getElementById('loginPanel');
     const adminApp = document.getElementById('adminApp');
     const loginErrorMsg = document.getElementById('loginErrorMsg');
@@ -346,18 +335,6 @@
                 <button class="danger" data-blog-index="${idx}" style="padding:6px 14px;">删除</button>
             </div>
         `).join('');
-        document.querySelectorAll('[data-blog-index]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const idx = parseInt(btn.dataset.blogIndex);
-                if (confirm(`删除「${blogsData[idx].title}」？`)) {
-                    blogsData.splice(idx, 1);
-                    if (await writeToRepo('resource/blogs.json', blogsData)) {
-                        renderBlogs();
-                        showMessage('已删除');
-                    } else showMessage('删除失败', true);
-                }
-            });
-        });
     }
 
     function renderNotices() {
@@ -369,19 +346,33 @@
                 <button class="danger" data-notice-index="${idx}" style="padding:6px 14px;">删除</button>
             </div>
         `).join('');
-        document.querySelectorAll('[data-notice-index]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const idx = parseInt(btn.dataset.noticeIndex);
-                if (confirm(`删除「${noticesData[idx].title}」？`)) {
-                    noticesData.splice(idx, 1);
-                    if (await writeToRepo('resource/notices.json', noticesData)) {
-                        renderNotices();
-                        showMessage('通知已删除');
-                    } else showMessage('删除失败', true);
-                }
-            });
-        });
     }
+
+    document.addEventListener('click', async (e) => {
+        const blogBtn = e.target.closest('[data-blog-index]');
+        if (blogBtn) {
+            const idx = parseInt(blogBtn.dataset.blogIndex);
+            if (confirm(`删除「${blogsData[idx].title}」？`)) {
+                blogsData.splice(idx, 1);
+                if (await writeToRepo('resource/blogs.json', blogsData)) {
+                    renderBlogs();
+                    showMessage('已删除');
+                } else showMessage('删除失败', true);
+            }
+            return;
+        }
+        const noticeBtn = e.target.closest('[data-notice-index]');
+        if (noticeBtn) {
+            const idx = parseInt(noticeBtn.dataset.noticeIndex);
+            if (confirm(`删除「${noticesData[idx].title}」？`)) {
+                noticesData.splice(idx, 1);
+                if (await writeToRepo('resource/notices.json', noticesData)) {
+                    renderNotices();
+                    showMessage('通知已删除');
+                } else showMessage('删除失败', true);
+            }
+        }
+    });
 
     async function addBlog() {
         const title = document.getElementById('blogTitle').value.trim();
@@ -391,7 +382,7 @@
             type: document.getElementById('blogType').value,
             tags: document.getElementById('blogTags').value.split(',').map(t=>t.trim()).filter(t=>t),
             title,
-            cover: "resource/blog_cover.png",
+            cover: "../resource/blog_cover.png",
             body,
             summary: document.getElementById('blogSummary').value
         };
@@ -428,24 +419,23 @@
         } else showMessage('添加失败', true);
     }
 
-    // 新窗口 OAuth 流程
     function openOAuthPopup() {
         const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
-        const popup = window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
-        if (!popup) {
-            loginErrorMsg.innerText = '请允许弹出窗口，再点击登录';
-        }
+        window.open(authUrl, 'githubAuth', 'width=800,height=600,left=200,top=100');
     }
 
     async function exchangeCode(code) {
-        const proxy = "https://cors-anywhere.herokuapp.com/";
-        const res = await fetch(proxy + "https://github.com/login/oauth/access_token", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, client_secret: "", code })
+        const res = await fetch("https://github.com/login/oauth/access_token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                client_id: GITHUB_CLIENT_ID,
+                client_secret: "",
+                code: code
+            })
         });
         const text = await res.text();
-        return new URLSearchParams(text).get('access_token');
+        return new URLSearchParams(text).get("access_token");
     }
 
     async function finishLogin(token) {
@@ -460,7 +450,7 @@
         currentUser = user;
         localStorage.setItem('admin_token', token);
         document.getElementById('userNameDisplay').innerText = user.login;
-        document.getElementById('userAvatar').src = user.avatar_url || 'resource/admin.png';
+        document.getElementById('userAvatar').src = user.avatar_url || '../resource/admin.png';
         loginPanel.style.display = 'none';
         adminApp.style.display = 'block';
         await loadAllData();
@@ -471,7 +461,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         if (!code) return;
-        // 清除 URL 参数，避免刷新重复处理
         window.history.replaceState({}, '', window.location.pathname);
         const token = await exchangeCode(code);
         if (!token) {
