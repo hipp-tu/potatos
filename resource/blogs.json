@@ -1,9 +1,37 @@
 [
   {
     "type": "网站历史",
-    "tags": ["HTML", "Javascript", "CSS"],
+    "tags": [
+      "HTML",
+      "Javascript",
+      "CSS"
+    ],
     "title": "2026/4/26 - 网站开放",
     "body": "<p>自己的网站终于搭起来了，在DeepSeek帮助下，网站迅速建成，但目前还在公测（虽然只有我一个人在线）</p>",
     "summary": "来看看Potatos.的建成"
+  },
+  {
+    "type": "网站历史",
+    "tags": [
+      "HTML",
+      "JavaScript",
+      "CSS"
+    ],
+    "title": "后台构建完毕",
+    "cover": "../resource/blog_cover.png",
+    "body": "后台也是建立了起来，目前因为是静态托管，所以后台直接用GitHub的Token实现。\n有什么可以自定义一级域名的带后台的托管欢迎联系<a class=\"nav-link\" href=\"../about.html\">邮箱</a>",
+    "summary": "网站的完善 #1"
+  },
+  {
+    "type": "网站历史",
+    "tags": [
+      "HTML",
+      "JavaScript",
+      "CSS"
+    ],
+    "title": "后台构建完毕",
+    "cover": "../resource/blog_cover.png",
+    "body": "后台也是建立了起来，目前因为是静态托管，所以后台直接用GitHub的Token实现。\n有什么可以自定义一级域名的带后台的托管欢迎联系<a class=\"nav-link\" href=\"../about.html\">邮箱</a>",
+    "summary": "网站的完善 #1"
   }
 ]
