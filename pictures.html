@@ -232,7 +232,7 @@
             <p>记录瞬间 · 分享视角</p>
         </div>
         <div id="galleryGrid" class="gallery-grid">
-            <div class="loading-area">📡 加载图片中…</div>
+            <div class="loading-area">📡 扫描图片中…</div>
         </div>
     </div>
 </div>
@@ -241,38 +241,67 @@
     (function() {
         const grid = document.getElementById('galleryGrid');
 
+        // 和你的 C++ 逻辑完全一致：
+        // 1️⃣ index.json
+        // 2️⃣ for each -> fetch(picture*)
+        // 3️⃣ only success → display
         async function loadGallery() {
             try {
-                // 1️⃣ 拉取 index.json
-                const res = await fetch('pictures/index.json?t=' + Date.now());
-                if (!res.ok) throw new Error('index.json 不存在');
-                const list = await res.json();
+                // ---------- 1️⃣ fetch(pictures/index.json) ----------
+                const indexRes = await fetch('pictures/index.json?t=' + Date.now());
+                if (!indexRes.ok) throw new Error('index.json 不存在');
+                const imageList = await indexRes.json();
 
-                if (!list.length) {
-                    grid.innerHTML = `<div class="empty-state">🖼️ 暂无图片<br><span style="font-size:0.85rem;">请通过 admin/pictures_manage.html 添加</span></div>`;
+                if (!imageList.length) {
+                    grid.innerHTML = `<div class="empty-state">🖼️ 暂无图片记录</div>`;
                     return;
                 }
 
-                // 2️⃣ 直接渲染（不 HEAD 验证，避免 GitHub Pages 限制）
-                let html = '';
-                for (let item of list) {
-                    const name = item.name;
-                    const date = item.date || '未知日期';
-                    const imgUrl = `pictures/${encodeURIComponent(name)}`;
+                // 准备并行验证所有图片
+                const checkTasks = imageList.map(async (item) => {
+                    const imgUrl = `pictures/${encodeURIComponent(item.name)}`;
+                    try {
+                        // ---------- 2️⃣ fetch(picture*) ----------
+                        const imgRes = await fetch(imgUrl, { method: 'HEAD' });
+                        if (imgRes.ok) {
+                            return {
+                                name: item.name,
+                                date: item.date || '未知日期',
+                                url: imgUrl
+                            };
+                        }
+                    } catch (e) {
+                        // 图片不可访问，忽略
+                    }
+                    return null;
+                });
 
+                // 等待所有验证完成
+                const checkedResults = await Promise.all(checkTasks);
+                const validImages = checkedResults.filter(v => v !== null);
+
+                if (validImages.length === 0) {
+                    grid.innerHTML = `<div class="empty-state">🖼️ 没有可用的图片文件<br><span style="font-size:0.85rem;">请将图片上传到 pictures/ 目录</span></div>`;
+                    return;
+                }
+
+                // ---------- 3️⃣ 只显示 fetch 成功的图片 ----------
+                let html = '';
+                for (const img of validImages) {
                     html += `
-                        <div class="gallery-card" onclick="showImage('${imgUrl.replace(/'/g, "\\'")}')">
+                        <div class="gallery-card" onclick="showImage('${img.url.replace(/'/g, "\\'")}')">
                             <div class="card-line"></div>
-                            <img class="gallery-img" src="${imgUrl}" loading="lazy" alt="${escapeHtml(name)}">
+                            <img class="gallery-img" src="${img.url}" loading="lazy" alt="${escapeHtml(img.name)}">
                             <div class="gallery-info">
-                                <div class="gallery-date">📅 ${escapeHtml(date)}</div>
-                                <div class="gallery-name">${escapeHtml(name)}</div>
+                                <div class="gallery-date">📅 ${escapeHtml(img.date)}</div>
+                                <div class="gallery-name">${escapeHtml(img.name)}</div>
                             </div>
                         </div>
                     `;
                 }
 
                 grid.innerHTML = html;
+
             } catch (err) {
                 console.error(err);
                 grid.innerHTML = `<div class="empty-state">❌ 加载失败<br><span>请确认 pictures/index.json 存在且格式正确</span></div>`;
