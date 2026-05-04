@@ -29,7 +29,6 @@
             background-color: #1a1a2e;
             z-index: 0;
         }
-        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -42,14 +41,10 @@
             background: rgba(255, 255, 255, 0.6);
             border-radius: 4px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.8);
-        }
         * {
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
         }
-        /* 顶栏 - 完全照抄主页 */
         .top-bar {
             position: fixed;
             top: 0;
@@ -75,18 +70,12 @@
             height: 50px;
             width: auto;
             object-fit: contain;
-            display: block;
         }
         .brand-name {
             color: white;
             font-size: 32px;
             font-weight: normal;
-            line-height: 1;
-            letter-spacing: 0.5px;
             text-decoration: none;
-        }
-        .brand-name:hover {
-            opacity: 0.8;
         }
         .right-section {
             display: flex;
@@ -98,26 +87,19 @@
             color: #C3C3C3;
             font-size: 14px;
             text-decoration: none;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s;
         }
         .nav-link:hover {
             opacity: 0.7;
             text-decoration: underline;
         }
-        /* 搜索框 */
         .search-box {
             display: flex;
             align-items: center;
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 20px;
             padding: 5px 12px;
-            transition: all 0.2s ease;
             border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        .search-box:hover,
-        .search-box:focus-within {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.6);
         }
         .search-input {
             background: transparent;
@@ -128,21 +110,11 @@
             width: 160px;
             padding: 6px 0;
         }
-        .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 13px;
-        }
         .search-icon {
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
             margin-right: 6px;
             cursor: pointer;
         }
-        .search-icon svg path {
-            stroke: rgba(255, 255, 255, 0.8);
-        }
-        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -154,30 +126,13 @@
             color: #C3C3C3;
             font-size: 14px;
             cursor: pointer;
-            transition: opacity 0.2s ease;
             font-family: inherit;
             padding: 0;
         }
-        .dropbtn:hover {
-            opacity: 0.7;
-            text-decoration: underline;
-        }
-        .dropdown-icon svg path {
-            stroke: #C3C3C3;
-        }
         .dropdown-icon {
             display: inline-flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s ease;
-            width: 20px;
-            height: 20px;
             margin-left: 6px;
-        }
-        .dropdown-icon svg {
-            display: block;
-            transition: all 0.2s ease;
         }
         .dropdown-content {
             display: none;
@@ -186,45 +141,13 @@
             left: 0;
             background-color: rgba(255, 255, 255, 0.5);
             min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 101;
-            border-radius: 4px;
-            margin-top: 8px;
             backdrop-filter: blur(4px);
+            border-radius: 4px;
+            z-index: 101;
         }
         .dropdown-content.show {
             display: block;
         }
-        .dropdown-content a {
-            color: #4a4a4a;
-            padding: 10px 16px;
-            text-decoration: none;
-            display: block;
-            font-size: 14px;
-            transition: background-color 0.2s ease;
-        }
-        .dropdown-content a:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        .dropdown-content .placeholder-item {
-            color: #4a4a4a;
-            padding: 10px 16px;
-            display: block;
-            font-size: 14px;
-            pointer-events: none;
-            background-color: transparent;
-            min-height: 36px;
-            text-align: left;
-        }
-        .dropdown-control {
-            display: flex;
-            align-items: center;
-        }
-        svg {
-            vertical-align: middle;
-        }
-
-        /* 画廊内容区 */
         .gallery-section {
             position: relative;
             z-index: 1;
@@ -243,20 +166,11 @@
         }
         .gallery-header h1 {
             font-size: 3rem;
-            font-weight: 700;
             background: linear-gradient(135deg, #FFFFFF, #FFE6B0);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: 2px;
         }
-        .gallery-header p {
-            color: #C7D0EB;
-            margin-top: 12px;
-            font-size: 1rem;
-            opacity: 0.8;
-        }
-        /* 图片网格 */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -268,19 +182,23 @@
             border-radius: 24px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
             cursor: pointer;
         }
         .gallery-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
             border-color: rgba(255, 220, 120, 0.5);
+        }
+        /* ✅ 和博客卡片一样：顶部线条，无封面图 */
+        .gallery-img-header {
+            height: 8px;
+            background: linear-gradient(90deg, #FFD966, #F4B942, #FFD966);
         }
         .gallery-img {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
-            background: #2a2e3e;
+            height: auto;
+            display: block;
+            background: #1e1f2c;
         }
         .gallery-info {
             padding: 16px;
@@ -288,9 +206,6 @@
         .gallery-date {
             font-size: 0.8rem;
             color: #FFE0A0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         .gallery-name {
             font-size: 0.75rem;
@@ -298,47 +213,12 @@
             margin-top: 8px;
             word-break: break-all;
         }
-        /* 加载状态 */
-        .loading-area {
-            text-align: center;
-            padding: 60px;
-            color: #FFE6B0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(8px);
-            border-radius: 40px;
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 24px;
-            height: 24px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #FFE6B0;
-            animation: spin 0.8s linear infinite;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
         .empty-state {
             text-align: center;
             padding: 60px 40px;
             background: rgba(20, 24, 38, 0.6);
-            backdrop-filter: blur(16px);
             border-radius: 48px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .empty-state .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.7;
-        }
-        .empty-state p {
-            color: #C7D0EB;
-            font-size: 1.1rem;
-        }
-        /* 模态框 */
         .modal-full {
             position: fixed;
             top: 0;
@@ -351,42 +231,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
         .modal-img {
             max-width: 90%;
             max-height: 90%;
-            object-fit: contain;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
         @media (max-width: 800px) {
             .gallery-grid {
                 grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 16px;
-            }
-            .brand-name {
-                font-size: 1.3rem;
-            }
-            .logo {
-                height: 38px;
-            }
-            .gallery-header h1 {
-                font-size: 2.2rem;
-            }
-            .top-bar {
-                padding: 0 16px;
-            }
-            .search-input {
-                width: 100px;
-            }
-        }
-        @media (max-width: 480px) {
-            .gallery-section {
-                padding: 90px 16px 40px;
-            }
-            .gallery-img {
-                height: 160px;
             }
         }
     </style>
@@ -394,39 +247,19 @@
 <body>
 <div class="background-cover"></div>
 
-<!-- 顶栏 - 完全照抄主页 -->
 <div class="top-bar">
     <div class="left-section" onclick="location.href='index.html';">
         <img class="logo" src="resource/logo.png" alt="logo">
         <span class="brand-name">Potatos</span>
     </div>
     <div class="right-section">
-        <a class="nav-link" href="about.html" target="_self">关于本站</a>
+        <a class="nav-link" href="about.html">关于本站</a>
         <div class="dropdown" id="projectDropdown">
-            <div class="dropdown-control">
-                <button class="dropbtn" id="dropdownButtonText">项目</button>
-                <span class="dropdown-icon" id="dropdownIcon">
-                    <svg id="iconLeft" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M15 18L9 12L15 6" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <svg id="iconDown" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display: none;">
-                        <path d="M6 9L12 15L18 9" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
-            </div>
-            <div class="dropdown-content" id="dropdownContent">
-                <a href="#">PotatoCPPApp</a>
-                <div class="placeholder-item">空</div>
-                <div class="placeholder-item">空</div>
-            </div>
+            <button class="dropbtn" id="dropdownButtonText">项目</button>
         </div>
         <div class="search-box">
-            <span class="search-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
-                </svg>
-            </span>
-            <input type="text" class="search-input" id="galleryKeywordInput" placeholder="搜索...">
+            <span class="search-icon" id="gallerySearchIcon">🔍</span>
+            <input type="text" id="galleryKeywordInput" class="search-input" placeholder="搜索...">
         </div>
     </div>
 </div>
@@ -438,160 +271,51 @@
             <p>记录瞬间 · 分享视角</p>
         </div>
         <div id="galleryGrid" class="gallery-grid">
-            <div class="loading-area">
-                <span class="loading-spinner"></span> 正在加载图片...
-            </div>
+            <div class="loading-area">加载中…</div>
         </div>
     </div>
 </div>
 
 <script>
-    // ================= 从 pictures/index.json 读取图片列表 =================
-    let pictureFiles = [];
-
-    async function loadPicturesFromJson() {
-        try {
-            const response = await fetch('pictures/index.json?t=' + Date.now());
-            if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    return data;
-                }
-            }
-        } catch (e) {
-            console.log('未找到 pictures/index.json');
-        }
-        return [];
-    }
-
     async function loadGallery() {
-        const gridContainer = document.getElementById('galleryGrid');
-        
-        pictureFiles = await loadPicturesFromJson();
-        
-        if (pictureFiles.length === 0) {
-            gridContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">🖼️</div>
-                    <p>暂无图片</p>
-                    <p style="font-size:0.85rem; margin-top:8px;">敬请期待土匪potato的摄影作品~</p>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '';
-        for (const item of pictureFiles) {
-            const imageName = item.name;
-            const imageDate = item.date || '未知日期';
-            const imageUrl = `pictures/${imageName}`;
-            
-            html += `
-                <div class="gallery-card" onclick="showImageModal('${imageUrl.replace(/'/g, "\\'")}', '${escapeHtml(imageName)}')">
-                    <img class="gallery-img" src="${imageUrl}" alt="${escapeHtml(imageName)}" loading="lazy" onerror="this.src='resource/blog_cover.png'">
+        const grid = document.getElementById('galleryGrid');
+        try {
+            const res = await fetch('pictures/index.json?t=' + Date.now());
+            const pics = await res.json();
+            if (!pics.length) throw new Error();
+            grid.innerHTML = pics.map(pic => `
+                <div class="gallery-card" onclick="showImage('pictures/${pic.name}')">
+                    <div class="gallery-img-header"></div>
+                    <img class="gallery-img" src="pictures/${pic.name}" loading="lazy" alt="${pic.name}">
                     <div class="gallery-info">
-                        <div class="gallery-date">📅 ${escapeHtml(imageDate)}</div>
-                        <div class="gallery-name">${escapeHtml(imageName)}</div>
+                        <div class="gallery-date">📅 ${pic.date || '未知日期'}</div>
+                        <div class="gallery-name">${escapeHtml(pic.name)}</div>
                     </div>
                 </div>
-            `;
+            `).join('');
+        } catch {
+            grid.innerHTML = `<div class="empty-state">🖼️ 暂无图片<br><span style="font-size:0.85rem;">请通过 admin 添加图片记录</span></div>`;
         }
-        gridContainer.innerHTML = html;
     }
-    
-    window.showImageModal = function(imgUrl, imgName) {
+
+    window.showImage = (url) => {
         const modal = document.createElement('div');
         modal.className = 'modal-full';
-        modal.innerHTML = `
-            <img class="modal-img" src="${imgUrl.replace(/'/g, "\\'")}" alt="${escapeHtml(imgName)}">
-        `;
+        modal.innerHTML = `<img class="modal-img" src="${url}" onclick="this.parentElement.remove()">`;
         document.body.appendChild(modal);
         modal.onclick = () => modal.remove();
     };
-    
+
     function escapeHtml(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        return String(str || '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
-    
-    function performSearch() {
-        const inputEl = document.getElementById('galleryKeywordInput');
-        const keyword = inputEl ? inputEl.value.trim() : '';
-        if (keyword) {
-            window.open(`search.html?q=${encodeURIComponent(keyword)}`, '_blank');
-        } else {
-            window.open('search.html', '_blank');
-        }
-    }
-    
-    function bindSearchEvents() {
-        const searchIcon = document.querySelector('.search-icon');
-        const searchInput = document.getElementById('galleryKeywordInput');
-        if (searchIcon) searchIcon.addEventListener('click', performSearch);
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    performSearch();
-                }
-            });
-        }
-    }
-    
-    function bindDropdown() {
-        const dropdownContainer = document.getElementById('projectDropdown');
-        const dropdownContent = document.getElementById('dropdownContent');
-        const iconLeft = document.getElementById('iconLeft');
-        const iconDown = document.getElementById('iconDown');
-        const iconWrapper = document.getElementById('dropdownIcon');
-        const dropdownTextBtn = document.getElementById('dropdownButtonText');
-        
-        if (!dropdownContainer) return;
-        
-        let isMenuOpen = false;
-        
-        function updateIcon() {
-            if (isMenuOpen) {
-                if (iconLeft) iconLeft.style.display = 'none';
-                if (iconDown) iconDown.style.display = 'block';
-            } else {
-                if (iconLeft) iconLeft.style.display = 'block';
-                if (iconDown) iconDown.style.display = 'none';
-            }
-        }
-        
-        function openMenu() {
-            if (!isMenuOpen) {
-                isMenuOpen = true;
-                if (dropdownContent) dropdownContent.classList.add('show');
-                updateIcon();
-            }
-        }
-        
-        function closeMenu() {
-            if (isMenuOpen) {
-                isMenuOpen = false;
-                if (dropdownContent) dropdownContent.classList.remove('show');
-                updateIcon();
-            }
-        }
-        
-        function toggleMenu() {
-            isMenuOpen ? closeMenu() : openMenu();
-        }
-        
-        if (iconWrapper) iconWrapper.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
-        if (dropdownTextBtn) dropdownTextBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
-        if (dropdownContent) dropdownContent.addEventListener('click', (e) => e.stopPropagation());
-        document.addEventListener('click', (e) => { if (dropdownContainer && !dropdownContainer.contains(e.target)) closeMenu(); });
-        updateIcon();
-    }
-    
-    document.addEventListener('DOMContentLoaded', () => {
-        loadGallery();
-        bindSearchEvents();
-        bindDropdown();
+
+    document.getElementById('gallerySearchIcon')?.addEventListener('click', () => {
+        const kw = document.getElementById('galleryKeywordInput').value.trim();
+        window.open(kw ? `search.html?q=${encodeURIComponent(kw)}` : 'search.html', '_blank');
     });
+
+    loadGallery();
 </script>
 </body>
 </html>
