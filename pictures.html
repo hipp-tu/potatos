@@ -189,7 +189,6 @@
             transform: translateY(-5px);
             border-color: rgba(255, 220, 120, 0.5);
         }
-        /* ✅ 和博客卡片一样：顶部线条，无封面图 */
         .gallery-img-header {
             height: 8px;
             background: linear-gradient(90deg, #FFD966, #F4B942, #FFD966);
@@ -213,11 +212,12 @@
             margin-top: 8px;
             word-break: break-all;
         }
-        .empty-state {
+        .loading-area, .empty-state {
             text-align: center;
             padding: 60px 40px;
             background: rgba(20, 24, 38, 0.6);
             border-radius: 48px;
+            color: #C7D0EB;
         }
         .modal-full {
             position: fixed;
@@ -271,51 +271,116 @@
             <p>记录瞬间 · 分享视角</p>
         </div>
         <div id="galleryGrid" class="gallery-grid">
-            <div class="loading-area">加载中…</div>
+            <div class="loading-area">📡 正在加载图片列表...</div>
         </div>
     </div>
 </div>
 
 <script>
+    // ================= 获取 JSON → 逐项 fetch 图片 =================
     async function loadGallery() {
-        const grid = document.getElementById('galleryGrid');
+        const gridContainer = document.getElementById('galleryGrid');
+        
         try {
-            const res = await fetch('pictures/index.json?t=' + Date.now());
-            const pics = await res.json();
-            if (!pics.length) throw new Error();
-            grid.innerHTML = pics.map(pic => `
-                <div class="gallery-card" onclick="showImage('pictures/${pic.name}')">
-                    <div class="gallery-img-header"></div>
-                    <img class="gallery-img" src="pictures/${pic.name}" loading="lazy" alt="${pic.name}">
-                    <div class="gallery-info">
-                        <div class="gallery-date">📅 ${pic.date || '未知日期'}</div>
-                        <div class="gallery-name">${escapeHtml(pic.name)}</div>
+            // 1. 获取图片列表 JSON
+            const response = await fetch('pictures/index.json?t=' + Date.now());
+            if (!response.ok) throw new Error('无法加载 index.json');
+            const imageRecords = await response.json();
+            
+            if (!Array.isArray(imageRecords) || imageRecords.length === 0) {
+                gridContainer.innerHTML = `<div class="empty-state">🖼️ 暂无图片记录<br><span style="font-size:0.85rem;">请通过 admin/pictures_manage.html 添加</span></div>`;
+                return;
+            }
+            
+            // 2. 显示加载中占位
+            gridContainer.innerHTML = `<div class="loading-area">🔍 正在验证图片文件...</div>`;
+            
+            // 3. 逐项验证图片是否存在（fetch HEAD 或直接尝试加载）
+            const validImages = [];
+            for (const record of imageRecords) {
+                const imageUrl = `pictures/${encodeURIComponent(record.name)}`;
+                try {
+                    const imgCheck = await fetch(imageUrl, { method: 'HEAD' });
+                    if (imgCheck.ok) {
+                        validImages.push({
+                            name: record.name,
+                            date: record.date || '未知日期',
+                            url: imageUrl
+                        });
+                    } else {
+                        console.warn(`图片不存在: ${record.name}`);
+                    }
+                } catch (err) {
+                    console.warn(`无法访问图片: ${record.name}`, err);
+                }
+            }
+            
+            // 4. 渲染验证通过的图片
+            if (validImages.length === 0) {
+                gridContainer.innerHTML = `<div class="empty-state">🖼️ 暂无可用图片<br><span style="font-size:0.85rem;">请上传图片文件到 pictures/ 目录</span></div>`;
+                return;
+            }
+            
+            let html = '';
+            for (const img of validImages) {
+                html += `
+                    <div class="gallery-card" onclick="showImageModal('${img.url.replace(/'/g, "\\'")}')">
+                        <div class="gallery-img-header"></div>
+                        <img class="gallery-img" src="${img.url}" alt="${escapeHtml(img.name)}" loading="lazy">
+                        <div class="gallery-info">
+                            <div class="gallery-date">📅 ${escapeHtml(img.date)}</div>
+                            <div class="gallery-name">${escapeHtml(img.name)}</div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
-        } catch {
-            grid.innerHTML = `<div class="empty-state">🖼️ 暂无图片<br><span style="font-size:0.85rem;">请通过 admin 添加图片记录</span></div>`;
+                `;
+            }
+            gridContainer.innerHTML = html;
+            
+        } catch (error) {
+            console.error('加载失败:', error);
+            gridContainer.innerHTML = `<div class="empty-state">❌ 加载失败<br><span style="font-size:0.85rem;">请确保 pictures/index.json 文件存在</span></div>`;
         }
     }
-
-    window.showImage = (url) => {
+    
+    // 大图模态框
+    window.showImageModal = function(imgUrl) {
         const modal = document.createElement('div');
         modal.className = 'modal-full';
-        modal.innerHTML = `<img class="modal-img" src="${url}" onclick="this.parentElement.remove()">`;
+        modal.innerHTML = `<img class="modal-img" src="${imgUrl}" alt="预览图">`;
         document.body.appendChild(modal);
         modal.onclick = () => modal.remove();
     };
-
+    
     function escapeHtml(str) {
-        return String(str || '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
-
-    document.getElementById('gallerySearchIcon')?.addEventListener('click', () => {
-        const kw = document.getElementById('galleryKeywordInput').value.trim();
-        window.open(kw ? `search.html?q=${encodeURIComponent(kw)}` : 'search.html', '_blank');
+    
+    // 搜索跳转
+    function performSearch() {
+        const keyword = document.getElementById('galleryKeywordInput').value.trim();
+        window.open(keyword ? `search.html?q=${encodeURIComponent(keyword)}` : 'search.html', '_blank');
+    }
+    
+    // 简单下拉菜单
+    function bindDropdown() {
+        const btn = document.getElementById('dropdownButtonText');
+        const content = document.getElementById('dropdownContent');
+        if (!btn || !content) return;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            content.classList.toggle('show');
+        });
+        document.addEventListener('click', () => content.classList.remove('show'));
+    }
+    
+    document.getElementById('gallerySearchIcon')?.addEventListener('click', performSearch);
+    document.getElementById('galleryKeywordInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performSearch();
     });
-
+    
     loadGallery();
+    bindDropdown();
 </script>
 </body>
 </html>
