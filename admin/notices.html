@@ -349,4 +349,345 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         .modal-header h3 {
-            color:
+            color: #FFE6B0;
+            font-size: 1.4rem;
+        }
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: white;
+            border-radius: 40px;
+            width: 40px;
+            height: 40px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        @media (max-width: 760px) {
+            .admin-section { padding: 90px 16px 40px; }
+            .list-item { flex-wrap: wrap; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="background-cover"></div>
+
+<!-- 登录界面 -->
+<div id="loginPanel" class="login-card">
+    <img src="../resource/admin.png" alt="admin" style="width: 80px; margin: 0 auto 16px;">
+    <h2 style="color:#FFE6B0;">通知管理</h2>
+    <p style="margin: 8px 0 20px; color:#ccc;">请输入管理密码</p>
+    <input type="password" id="adminPassword" placeholder="密码" autocomplete="off">
+    <button id="loginBtn">🔐 登录</button>
+    <div id="loginError" style="color:#ff8888; margin-top: 16px;"></div>
+</div>
+
+<!-- 管理界面 -->
+<div id="adminPanel" style="display: none;">
+    <div class="top-bar">
+        <div class="left-section" onclick="location.href='index.html';">
+            <img class="logo" src="../resource/admin.png" alt="admin">
+            <span class="brand-name">通知管理</span>
+        </div>
+        <div class="right-section">
+            <a href="index.html" class="nav-link">← 返回首页</a>
+            <button id="logoutBtn" class="logout-btn">退出登录</button>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <div class="admin-container">
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3>➕ 添加通知</h3>
+                </div>
+                <div class="card-body">
+                    <input type="text" id="noticeTitle" placeholder="标题 *">
+                    <input type="text" id="noticeType" placeholder="分类 (如: 站点公告, 功能更新)">
+                    <input type="text" id="noticeIcon" placeholder="图标 (Emoji, 如: 🎉, 🔍, 📢)">
+                    <input type="text" id="noticeDate" readonly placeholder="日期">
+                    <div class="date-hint">📅 日期自动生成，无需手动填写</div>
+                    <textarea id="noticeContent" rows="6" placeholder="正文 (支持HTML)"></textarea>
+                    <input type="text" id="noticeSummary" placeholder="摘要">
+                    <button id="addNoticeBtn">📢 发布通知</button>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3>📋 现有通知</h3>
+                </div>
+                <div class="card-body">
+                    <div id="noticeListContainer" class="item-list">加载中…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="statusMsg" class="status-msg"></div>
+
+<script>
+    (function() {
+        const PASSWORD_HASH = "b087017cc9269f477ba6954969cd68a96c8521541c961c30bf99c2804dbb94a9";
+        const REPO_OWNER = "hipp-tu";
+        const REPO_NAME = "potatos";
+
+        let githubToken = null;
+        let noticesData = [];
+
+        const loginPanel = document.getElementById('loginPanel');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginError = document.getElementById('loginError');
+        const statusDiv = document.getElementById('statusMsg');
+
+        function setCurrentDate() {
+            const dateInput = document.getElementById('noticeDate');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().slice(0, 10);
+            }
+        }
+
+        function showMessage(msg, isError = false) {
+            statusDiv.innerText = msg;
+            statusDiv.style.background = isError ? 'rgba(220,53,69,0.9)' : 'rgba(40,167,69,0.9)';
+            statusDiv.style.color = 'white';
+            statusDiv.style.display = 'block';
+            setTimeout(() => statusDiv.style.display = 'none', 3000);
+        }
+
+        async function hashPassword(pwd) {
+            const enc = new TextEncoder();
+            const buf = await crypto.subtle.digest('SHA-256', enc.encode(pwd));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+        }
+
+        async function handleLogin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if (!pwd) { loginError.innerText = '请输入密码'; return; }
+            if (await hashPassword(pwd) === PASSWORD_HASH) {
+                sessionStorage.setItem('notice_admin_auth', 'true');
+                loginPanel.style.display = 'none';
+                adminPanel.style.display = 'block';
+                setCurrentDate();
+                await loadData();
+            } else {
+                loginError.innerText = '密码错误';
+            }
+        }
+
+        async function getToken() {
+            if (githubToken) return githubToken;
+            let token = sessionStorage.getItem('github_token');
+            if (token) {
+                githubToken = token;
+                return token;
+            }
+            token = prompt('请输入 GitHub Token（需要 repo 权限）\n生成：https://github.com/settings/tokens/new?scopes=repo');
+            if (token) {
+                githubToken = token;
+                sessionStorage.setItem('github_token', token);
+            }
+            return token;
+        }
+
+        async function fetchFile(path) {
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const binary = atob(data.content);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+        }
+
+        async function writeFile(path, contentObj) {
+            const token = await getToken();
+            if (!token) return false;
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            let sha = '';
+            try {
+                const get = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (get.ok) sha = (await get.json()).sha;
+            } catch(e) {}
+            const jsonStr = JSON.stringify(contentObj, null, 2);
+            const encoder = new TextEncoder();
+            const uint8 = encoder.encode(jsonStr);
+            let binary = '';
+            for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+            const put = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `update ${path}`, content: btoa(binary), sha })
+            });
+            return put.ok;
+        }
+
+        async function loadData() {
+            try {
+                const data = await fetchFile('resource/notices.json');
+                if (data) noticesData = data;
+                renderList();
+            } catch(e) { showMessage('加载失败', true); }
+        }
+
+        function openEditModal(index) {
+            const notice = noticesData[index];
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <h3>✏️ 编辑通知</h3>
+                        <button class="modal-close">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="editTitle" value="${escapeHtml(notice.title)}" placeholder="标题">
+                        <input type="text" id="editType" value="${escapeHtml(notice.type || '')}" placeholder="分类">
+                        <input type="text" id="editIcon" value="${escapeHtml(notice.icon || '📢')}" placeholder="图标">
+                        <textarea id="editContent" rows="8" placeholder="正文">${escapeHtml(notice.content)}</textarea>
+                        <input type="text" id="editSummary" value="${escapeHtml(notice.summary || '')}" placeholder="摘要">
+                    </div>
+                    <div class="modal-actions">
+                        <button id="saveEditBtn" class="secondary">💾 保存修改</button>
+                        <button id="cancelEditBtn" class="secondary">取消</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            modal.querySelector('.modal-close').onclick = () => modal.remove();
+            modal.querySelector('#cancelEditBtn').onclick = () => modal.remove();
+            modal.querySelector('#saveEditBtn').onclick = async () => {
+                const newTitle = modal.querySelector('#editTitle').value.trim();
+                const newType = modal.querySelector('#editType').value.trim();
+                const newContent = modal.querySelector('#editContent').value.trim();
+                if (!newTitle || !newType || !newContent) {
+                    showMessage('标题、分类、正文不能为空', true);
+                    return;
+                }
+                noticesData[index] = {
+                    ...notice,
+                    title: newTitle,
+                    type: newType,
+                    icon: modal.querySelector('#editIcon').value.trim() || '📢',
+                    content: newContent,
+                    summary: modal.querySelector('#editSummary').value,
+                    date: notice.date || new Date().toISOString().slice(0, 10)
+                };
+                if (await writeFile('resource/notices.json', noticesData)) {
+                    showMessage('修改已保存');
+                    renderList();
+                    modal.remove();
+                } else {
+                    showMessage('保存失败', true);
+                }
+            };
+        }
+
+        function renderList() {
+            const container = document.getElementById('noticeListContainer');
+            if (!noticesData.length) {
+                container.innerHTML = '<div style="color:#aaa; text-align:center;">暂无通知</div>';
+                return;
+            }
+            let html = '';
+            noticesData.forEach((notice, idx) => {
+                html += `
+                    <div class="list-item" data-index="${idx}">
+                        <div class="item-info">
+                            <div class="item-title">${escapeHtml(notice.icon || '📢')} ${escapeHtml(notice.title)}</div>
+                            <div class="item-meta">${escapeHtml(notice.type || '未分类')} · ${notice.date || ''}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="edit-btn" data-index="${idx}">✏️ 编辑</button>
+                            <button class="danger delete-btn" data-index="${idx}">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.index);
+                    openEditModal(idx);
+                });
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.index);
+                    if (confirm(`删除「${noticesData[idx].title}」？`)) {
+                        noticesData.splice(idx, 1);
+                        if (await writeFile('resource/notices.json', noticesData)) {
+                            renderList();
+                            showMessage('已删除');
+                        } else showMessage('删除失败', true);
+                    }
+                });
+            });
+        }
+
+        async function addNotice() {
+            const title = document.getElementById('noticeTitle').value.trim();
+            const type = document.getElementById('noticeType').value.trim();
+            const content = document.getElementById('noticeContent').value.trim();
+            if (!title || !type || !content) { 
+                showMessage('标题、分类、正文不能为空', true); 
+                return; 
+            }
+            const newNotice = {
+                id: Date.now(),
+                title: title,
+                type: type,
+                icon: document.getElementById('noticeIcon').value.trim() || '📢',
+                date: document.getElementById('noticeDate').value || new Date().toISOString().slice(0, 10),
+                summary: document.getElementById('noticeSummary').value,
+                content: content
+            };
+            noticesData.push(newNotice);
+            if (await writeFile('resource/notices.json', noticesData)) {
+                showMessage('发布成功');
+                document.getElementById('noticeTitle').value = '';
+                document.getElementById('noticeType').value = '';
+                document.getElementById('noticeIcon').value = '';
+                document.getElementById('noticeContent').value = '';
+                document.getElementById('noticeSummary').value = '';
+                setCurrentDate();
+                renderList();
+            } else showMessage('发布失败', true);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
+
+        function logout() {
+            sessionStorage.removeItem('notice_admin_auth');
+            window.location.reload();
+        }
+
+        if (sessionStorage.getItem('notice_admin_auth') === 'true') {
+            loginPanel.style.display = 'none';
+            adminPanel.style.display = 'block';
+            setCurrentDate();
+            loadData();
+        }
+
+        document.getElementById('loginBtn')?.addEventListener('click', handleLogin);
+        document.getElementById('addNoticeBtn')?.addEventListener('click', addNotice);
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('adminPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+    })();
+</script>
+</body>
+</html>
