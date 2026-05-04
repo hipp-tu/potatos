@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>博客管理 | Potatos. 管理后台</title>
+    <link rel="icon" type="image/png" href="../resource/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+        .background-cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('../resource/admin_background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            z-index: 0;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
+        }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: rgba(136, 136, 136, 0.35);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .left-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+        }
+        .logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+        .brand-name {
+            color: white;
+            font-size: 32px;
+            font-weight: normal;
+            text-decoration: none;
+        }
+        .brand-name:hover {
+            opacity: 0.8;
+        }
+        .right-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-left: auto;
+        }
+        .nav-link {
+            color: #C3C3C3;
+            font-size: 14px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+        .nav-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+        .logout-btn {
+            background: rgba(220, 38, 38, 0.7);
+            border: none;
+            padding: 6px 18px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .dropbtn {
+            background: none;
+            border: none;
+            color: #C3C3C3;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 0;
+        }
+        .dropdown-icon svg path {
+            stroke: #C3C3C3;
+        }
+        .dropdown-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            margin-left: 6px;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.5);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 101;
+            border-radius: 4px;
+            margin-top: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-content a {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+        }
+        .dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .dropdown-content .placeholder-item {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            display: block;
+            font-size: 14px;
+            pointer-events: none;
+            min-height: 36px;
+        }
+        .dropdown-control {
+            display: flex;
+            align-items: center;
+        }
+        .admin-section {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-height: 100%;
+            padding: 100px 5% 60px;
+            overflow-y: auto;
+        }
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .glass-card {
+            background: rgba(20, 24, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+        .card-header {
+            padding: 20px 24px 8px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card-header h3 {
+            color: #FFE6B0;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-body {
+            padding: 24px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #FFD966;
+            box-shadow: 0 0 0 2px rgba(255, 217, 102, 0.3);
+        }
+        button {
+            background: linear-gradient(135deg, #FFD966, #F4B942);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #1e1f2c;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.98);
+        }
+        button.danger {
+            background: #dc3545;
+            color: white;
+        }
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .list-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-title {
+            font-weight: 600;
+            color: #F5E9CF;
+            margin-bottom: 4px;
+        }
+        .item-meta {
+            font-size: 0.7rem;
+            color: #aaa;
+        }
+        .status-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 40px;
+            z-index: 200;
+            display: none;
+            font-size: 0.9rem;
+        }
+        .login-card {
+            max-width: 420px;
+            margin: 120px auto;
+            background: rgba(20, 24, 38, 0.85);
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 40px 32px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .login-card input {
+            margin-bottom: 20px;
+        }
+        .login-card button {
+            width: 100%;
+        }
+        @media (max-width: 760px) {
+            .admin-section { padding: 90px 16px 40px; }
+            .list-item { flex-wrap: wrap; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="background-cover"></div>
+
+<!-- 登录界面 -->
+<div id="loginPanel" class="login-card" style="display: flex; flex-direction: column;">
+    <img src="../resource/admin.png" alt="admin" style="width: 80px; margin: 0 auto 16px;">
+    <h2 style="color:#FFE6B0;">博客管理</h2>
+    <p style="margin: 8px 0 20px; color:#ccc;">请输入管理密码</p>
+    <input type="password" id="adminPassword" placeholder="密码" autocomplete="off">
+    <button id="loginBtn">🔐 登录</button>
+    <div id="loginError" style="color:#ff8888; margin-top: 16px;"></div>
+</div>
+
+<!-- 管理界面 -->
+<div id="adminPanel" style="display: none;">
+    <div class="top-bar">
+        <div class="left-section" onclick="location.href='index.html';">
+            <img class="logo" src="../resource/admin.png" alt="admin">
+            <span class="brand-name">博客管理</span>
+        </div>
+        <div class="right-section">
+            <a href="index.html" class="nav-link">← 返回首页</a>
+            <button id="logoutBtn" class="logout-btn">退出登录</button>
+        </div>
+    </div>
+
+    <div class="admin-section">
+        <div class="admin-container">
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3>📝 添加博客</h3>
+                </div>
+                <div class="card-body">
+                    <input type="text" id="blogTitle" placeholder="标题 *">
+                    <!-- 分类改为输入框，不再使用下拉选择 -->
+                    <input type="text" id="blogType" placeholder="分类 (如: 技术笔记, 日志, AI探索)">
+                    <input type="text" id="blogTags" placeholder="标签 (逗号分隔, 如: C++,Python)">
+                    <textarea id="blogBody" rows="6" placeholder="正文 (支持HTML)"></textarea>
+                    <input type="text" id="blogSummary" placeholder="摘要 (简短介绍)">
+                    <button id="addBlogBtn">✨ 发布博客</button>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header">
+                    <h3>📚 现有博客</h3>
+                </div>
+                <div class="card-body">
+                    <div id="blogListContainer" class="item-list">加载中…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="statusMsg" class="status-msg"></div>
+
+<script>
+    (function() {
+        const PASSWORD_HASH = "b087017cc9269f477ba6954969cd68a96c8521541c961c30bf99c2804dbb94a9";
+        const REPO_OWNER = "hipp-tu";
+        const REPO_NAME = "potatos";
+
+        let githubToken = null;
+        let blogsData = [];
+
+        const loginPanel = document.getElementById('loginPanel');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginError = document.getElementById('loginError');
+        const statusDiv = document.getElementById('statusMsg');
+
+        function showMessage(msg, isError = false) {
+            statusDiv.innerText = msg;
+            statusDiv.style.background = isError ? 'rgba(220,53,69,0.9)' : 'rgba(40,167,69,0.9)';
+            statusDiv.style.color = 'white';
+            statusDiv.style.display = 'block';
+            setTimeout(() => statusDiv.style.display = 'none', 3000);
+        }
+
+        async function hashPassword(pwd) {
+            const enc = new TextEncoder();
+            const buf = await crypto.subtle.digest('SHA-256', enc.encode(pwd));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+        }
+
+        async function handleLogin() {
+            const pwd = document.getElementById('adminPassword').value;
+            if (!pwd) { loginError.innerText = '请输入密码'; return; }
+            if (await hashPassword(pwd) === PASSWORD_HASH) {
+                sessionStorage.setItem('blog_admin_auth', 'true');
+                loginPanel.style.display = 'none';
+                adminPanel.style.display = 'block';
+                await loadData();
+            } else {
+                loginError.innerText = '密码错误';
+            }
+        }
+
+        async function getToken() {
+            if (githubToken) return githubToken;
+            let token = sessionStorage.getItem('github_token');
+            if (token) {
+                githubToken = token;
+                return token;
+            }
+            token = prompt('请输入 GitHub Token（需要 repo 权限）\n生成：https://github.com/settings/tokens/new?scopes=repo');
+            if (token) {
+                githubToken = token;
+                sessionStorage.setItem('github_token', token);
+            }
+            return token;
+        }
+
+        async function fetchFile(path) {
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            const binary = atob(data.content);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return JSON.parse(new TextDecoder('utf-8').decode(bytes));
+        }
+
+        async function writeFile(path, contentObj) {
+            const token = await getToken();
+            if (!token) return false;
+            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+            let sha = '';
+            try {
+                const get = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (get.ok) sha = (await get.json()).sha;
+            } catch(e) {}
+            const jsonStr = JSON.stringify(contentObj, null, 2);
+            const encoder = new TextEncoder();
+            const uint8 = encoder.encode(jsonStr);
+            let binary = '';
+            for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+            const put = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: `update ${path}`, content: btoa(binary), sha })
+            });
+            return put.ok;
+        }
+
+        async function loadData() {
+            try {
+                const data = await fetchFile('resource/blogs.json');
+                if (data) blogsData = data;
+                renderList();
+            } catch(e) { showMessage('加载失败', true); }
+        }
+
+        function renderList() {
+            const container = document.getElementById('blogListContainer');
+            if (!blogsData.length) {
+                container.innerHTML = '<div style="color:#aaa; text-align:center;">暂无博客</div>';
+                return;
+            }
+            let html = '';
+            blogsData.forEach((blog, idx) => {
+                html += `
+                    <div class="list-item" data-index="${idx}">
+                        <div class="item-info">
+                            <div class="item-title">${escapeHtml(blog.title)}</div>
+                            <div class="item-meta">${escapeHtml(blog.type)} · ${(blog.tags || []).map(escapeHtml).join(', ')}</div>
+                        </div>
+                        <button class="danger delete-btn" data-index="${idx}">删除</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.index);
+                    if (confirm(`删除「${blogsData[idx].title}」？`)) {
+                        blogsData.splice(idx, 1);
+                        if (await writeFile('resource/blogs.json', blogsData)) {
+                            renderList();
+                            showMessage('已删除');
+                        } else showMessage('删除失败', true);
+                    }
+                });
+            });
+        }
+
+        async function addBlog() {
+            const title = document.getElementById('blogTitle').value.trim();
+            const type = document.getElementById('blogType').value.trim();
+            const body = document.getElementById('blogBody').value.trim();
+            if (!title || !type || !body) { 
+                showMessage('标题、分类、正文不能为空', true); 
+                return; 
+            }
+            const newBlog = {
+                type: type,
+                tags: document.getElementById('blogTags').value.split(',').map(t=>t.trim()).filter(t=>t),
+                title: title,
+                cover: "../resource/blog_cover.png",
+                body: body,
+                summary: document.getElementById('blogSummary').value
+            };
+            blogsData.push(newBlog);
+            if (await writeFile('resource/blogs.json', blogsData)) {
+                showMessage('发布成功');
+                document.getElementById('blogTitle').value = '';
+                document.getElementById('blogType').value = '';
+                document.getElementById('blogTags').value = '';
+                document.getElementById('blogBody').value = '';
+                document.getElementById('blogSummary').value = '';
+                renderList();
+            } else showMessage('发布失败', true);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
+
+        function logout() {
+            sessionStorage.removeItem('blog_admin_auth');
+            window.location.reload();
+        }
+
+        if (sessionStorage.getItem('blog_admin_auth') === 'true') {
+            loginPanel.style.display = 'none';
+            adminPanel.style.display = 'block';
+            loadData();
+        }
+
+        document.getElementById('loginBtn')?.addEventListener('click', handleLogin);
+        document.getElementById('addBlogBtn')?.addEventListener('click', addBlog);
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('adminPassword')?.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+    })();
+</script>
+</body>
+</html>
