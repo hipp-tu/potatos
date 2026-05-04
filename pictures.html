@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>画廊 | Potatos. - 土匪potato的赛博实验室</title>
+    <link rel="icon" type="image/png" href="resource/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            background-color: #000;
+        }
+        .background-cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('resource/home_background.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            background-color: #1a1a2e;
+            z-index: 0;
+        }
+        /* 白色透明滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
+        }
+        /* 顶栏 - 完全照抄主页 */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: rgba(136, 136, 136, 0.35);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .left-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+        }
+        .logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+        .brand-name {
+            color: white;
+            font-size: 32px;
+            font-weight: normal;
+            line-height: 1;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+        .brand-name:hover {
+            opacity: 0.8;
+        }
+        .right-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-left: auto;
+        }
+        .nav-link {
+            color: #C3C3C3;
+            font-size: 14px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+        .nav-link:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+        /* 搜索框 */
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 5px 12px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .search-box:hover,
+        .search-box:focus-within {
+            background-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            width: 160px;
+            padding: 6px 0;
+        }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+        }
+        .search-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            cursor: pointer;
+        }
+        .search-icon svg path {
+            stroke: rgba(255, 255, 255, 0.8);
+        }
+        /* 下拉菜单 */
+        .dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .dropbtn {
+            background: none;
+            border: none;
+            color: #C3C3C3;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            font-family: inherit;
+            padding: 0;
+        }
+        .dropbtn:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+        .dropdown-icon svg path {
+            stroke: #C3C3C3;
+        }
+        .dropdown-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 20px;
+            height: 20px;
+            margin-left: 6px;
+        }
+        .dropdown-icon svg {
+            display: block;
+            transition: all 0.2s ease;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: rgba(255, 255, 255, 0.5);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 101;
+            border-radius: 4px;
+            margin-top: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-content a {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+        .dropdown-content a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .dropdown-content .placeholder-item {
+            color: #4a4a4a;
+            padding: 10px 16px;
+            display: block;
+            font-size: 14px;
+            pointer-events: none;
+            background-color: transparent;
+            min-height: 36px;
+            text-align: left;
+        }
+        .dropdown-control {
+            display: flex;
+            align-items: center;
+        }
+        svg {
+            vertical-align: middle;
+        }
+
+        /* 画廊内容区 */
+        .gallery-section {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-height: 100%;
+            padding: 100px 5% 60px;
+            overflow-y: auto;
+        }
+        .gallery-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .gallery-header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFFFFF, #FFE6B0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .gallery-header p {
+            color: #C7D0EB;
+            margin-top: 12px;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        /* 图片网格 */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .gallery-card {
+            background: rgba(20, 24, 38, 0.7);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 220, 120, 0.5);
+        }
+        .gallery-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #2a2e3e;
+        }
+        .gallery-info {
+            padding: 16px;
+        }
+        .gallery-date {
+            font-size: 0.8rem;
+            color: #FFE0A0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .gallery-name {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+        /* 加载状态 */
+        .loading-area {
+            text-align: center;
+            padding: 60px;
+            color: #FFE6B0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 40px;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #FFE6B0;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(20, 24, 38, 0.6);
+            backdrop-filter: blur(16px);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        .empty-state p {
+            color: #C7D0EB;
+            font-size: 1.1rem;
+        }
+        /* 模态框 */
+        .modal-full {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        @media (max-width: 800px) {
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 16px;
+            }
+            .brand-name {
+                font-size: 1.3rem;
+            }
+            .logo {
+                height: 38px;
+            }
+            .gallery-header h1 {
+                font-size: 2.2rem;
+            }
+            .top-bar {
+                padding: 0 16px;
+            }
+            .search-input {
+                width: 100px;
+            }
+        }
+        @media (max-width: 480px) {
+            .gallery-section {
+                padding: 90px 16px 40px;
+            }
+            .gallery-img {
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="background-cover"></div>
+
+<!-- 顶栏 - 完全照抄主页 -->
+<div class="top-bar">
+    <div class="left-section" onclick="location.href='index.html';">
+        <img class="logo" src="resource/logo.png" alt="logo">
+        <span class="brand-name">Potatos</span>
+    </div>
+    <div class="right-section">
+        <a class="nav-link" href="about.html" target="_self">关于本站</a>
+        <div class="dropdown" id="projectDropdown">
+            <div class="dropdown-control">
+                <button class="dropbtn" id="dropdownButtonText">项目</button>
+                <span class="dropdown-icon" id="dropdownIcon">
+                    <svg id="iconLeft" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg id="iconDown" width="16" height="16" viewBox="0 0 24 24" fill="none" style="display: none;">
+                        <path d="M6 9L12 15L18 9" stroke="#C3C3C3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </div>
+            <div class="dropdown-content" id="dropdownContent">
+                <a href="#">PotatoCPPApp</a>
+                <div class="placeholder-item">空</div>
+                <div class="placeholder-item">空</div>
+            </div>
+        </div>
+        <div class="search-box">
+            <span class="search-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="rgba(255,255,255,0.8)" stroke-width="1.5"/>
+                </svg>
+            </span>
+            <input type="text" class="search-input" id="galleryKeywordInput" placeholder="搜索...">
+        </div>
+    </div>
+</div>
+
+<div class="gallery-section">
+    <div class="gallery-container">
+        <div class="gallery-header">
+            <h1>🖼️ 赛博画廊</h1>
+            <p>记录瞬间 · 分享视角</p>
+        </div>
+        <div id="galleryGrid" class="gallery-grid">
+            <div class="loading-area">
+                <span class="loading-spinner"></span> 正在加载图片...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= 从 pictures/ 目录读取图片 =================
+    // 注意：GitHub Pages 无法直接列出目录内容，需要配合一个 index.json 或使用 js 前端获取
+    // 方案：通过 fetch 获取 pictures/ 目录下的文件列表（需要服务端支持）
+    
+    // 由于 GitHub Pages 不支持目录列表 API，我们改用：
+    // 1. 手动在项目根目录生成 pictures/index.json 列出所有图片
+    // 2. 或者在前端定义一个已知图片列表
+    
+    // 为了方便，这里提供一个前端自动尝试获取并显示的方案
+    // 实际使用时可以配合 GitHub Actions 自动生成 pictures/index.json
+    
+    // 预先定义已知图片列表（可扩展，或从 pictures/index.json 加载）
+    // 如果没有 pictures/index.json，可以通过文件名推断
+    let pictureFiles = [];
+    
+    // 尝试从 pictures/index.json 加载
+    async function loadPicturesFromJson() {
+        try {
+            const response = await fetch('pictures/index.json?t=' + Date.now());
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    return data;
+                }
+            }
+        } catch (e) {
+            console.log('未找到 pictures/index.json，将尝试自动扫描图片');
+        }
+        return null;
+    }
+    
+    // 解析文件名中的日期（支持格式：YYYYMMDD_xxxx.png 或 YYYY-MM-DD_xxxx.png）
+    function parseDateFromFilename(filename) {
+        const patterns = [
+            /^(\d{4})(\d{2})(\d{2})/,
+            /^(\d{4})-(\d{2})-(\d{2})/,
+            /_(\d{4})(\d{2})(\d{2})/,
+            /_(\d{4})-(\d{2})-(\d{2})/
+        ];
+        for (const pattern of patterns) {
+            const match = filename.match(pattern);
+            if (match) {
+                return `${match[1]}-${match[2]}-${match[3]}`;
+            }
+        }
+        return null;
+    }
+    
+    // 获取图片的修改时间（通过 fetch HEAD 请求）
+    async function getImageDate(url) {
+        try {
+            const response = await fetch(url, { method: 'HEAD' });
+            const lastModified = response.headers.get('Last-Modified');
+            if (lastModified) {
+                return new Date(lastModified).toISOString().slice(0, 10);
+            }
+        } catch (e) {}
+        return null;
+    }
+    
+    // 主加载函数
+    async function loadGallery() {
+        const gridContainer = document.getElementById('galleryGrid');
+        
+        // 优先从 index.json 加载
+        const jsonData = await loadPicturesFromJson();
+        
+        if (jsonData && jsonData.length > 0) {
+            // 使用 json 数据
+            pictureFiles = jsonData;
+        } else {
+            // 如果没有 json，尝试扫描常见命名格式的图片（需要手动指定范围）
+            // 这里提供一个示例列表，实际使用时可以根据站点内容配置
+            // 或者用户手动在 pictures/ 目录上传图片并维护 json
+            pictureFiles = [];
+            // 尝试检测一些常见图片
+            const testImages = [];
+            for (let i = 1; i <= 20; i++) {
+                testImages.push(`photo_${i}.png`);
+                testImages.push(`img_${i}.png`);
+                testImages.push(`pic_${i}.png`);
+            }
+            // 去重并过滤存在的
+            const existingImages = [];
+            for (const img of testImages) {
+                try {
+                    const res = await fetch(`pictures/${img}`, { method: 'HEAD' });
+                    if (res.ok) existingImages.push(img);
+                } catch(e) {}
+            }
+            pictureFiles = existingImages.map(name => ({ name, date: parseDateFromFilename(name) }));
+        }
+        
+        if (pictureFiles.length === 0) {
+            gridContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🖼️</div>
+                    <p>暂无图片</p>
+                    <p style="font-size:0.85rem; margin-top:8px;">敬请期待土匪potato的摄影作品~</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 构建 HTML
+        let html = '';
+        for (const item of pictureFiles) {
+            const imageName = typeof item === 'string' ? item : item.name;
+            const imageDate = typeof item === 'string' ? parseDateFromFilename(item) : (item.date || parseDateFromFilename(item.name));
+            const displayDate = imageDate || '未知日期';
+            const imageUrl = `pictures/${imageName}`;
+            
+            html += `
+                <div class="gallery-card" onclick="showImageModal('${imageUrl.replace(/'/g, "\\'")}', '${escapeHtml(imageName)}')">
+                    <img class="gallery-img" src="${imageUrl}" alt="${escapeHtml(imageName)}" loading="lazy" onerror="this.src='resource/blog_cover.png'">
+                    <div class="gallery-info">
+                        <div class="gallery-date">📅 ${escapeHtml(displayDate)}</div>
+                        <div class="gallery-name">${escapeHtml(imageName)}</div>
+                    </div>
+                </div>
+            `;
+        }
+        gridContainer.innerHTML = html;
+    }
+    
+    // 显示大图模态框
+    window.showImageModal = function(imgUrl, imgName) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-full';
+        modal.innerHTML = `
+            <img class="modal-img" src="${imgUrl.replace(/'/g, "\\'")}" alt="${escapeHtml(imgName)}">
+        `;
+        document.body.appendChild(modal);
+        modal.onclick = () => modal.remove();
+    };
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+    }
+    
+    // 搜索跳转
+    function performSearch() {
+        const inputEl = document.getElementById('galleryKeywordInput');
+        const keyword = inputEl ? inputEl.value.trim() : '';
+        if (keyword) {
+            window.open(`search.html?q=${encodeURIComponent(keyword)}`, '_blank');
+        } else {
+            window.open('search.html', '_blank');
+        }
+    }
+    
+    function bindSearchEvents() {
+        const searchIcon = document.querySelector('.search-icon');
+        const searchInput = document.getElementById('galleryKeywordInput');
+        if (searchIcon) searchIcon.addEventListener('click', performSearch);
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
+                }
+            });
+        }
+    }
+    
+    // 下拉菜单绑定
+    function bindDropdown() {
+        const dropdownContainer = document.getElementById('projectDropdown');
+        const dropdownContent = document.getElementById('dropdownContent');
+        const iconLeft = document.getElementById('iconLeft');
+        const iconDown = document.getElementById('iconDown');
+        const iconWrapper = document.getElementById('dropdownIcon');
+        const dropdownTextBtn = document.getElementById('dropdownButtonText');
+        
+        if (!dropdownContainer) return;
+        
+        let isMenuOpen = false;
+        
+        function updateIcon() {
+            if (isMenuOpen) {
+                if (iconLeft) iconLeft.style.display = 'none';
+                if (iconDown) iconDown.style.display = 'block';
+            } else {
+                if (iconLeft) iconLeft.style.display = 'block';
+                if (iconDown) iconDown.style.display = 'none';
+            }
+        }
+        
+        function openMenu() {
+            if (!isMenuOpen) {
+                isMenuOpen = true;
+                if (dropdownContent) dropdownContent.classList.add('show');
+                updateIcon();
+            }
+        }
+        
+        function closeMenu() {
+            if (isMenuOpen) {
+                isMenuOpen = false;
+                if (dropdownContent) dropdownContent.classList.remove('show');
+                updateIcon();
+            }
+        }
+        
+        function toggleMenu() {
+            isMenuOpen ? closeMenu() : openMenu();
+        }
+        
+        if (iconWrapper) iconWrapper.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+        if (dropdownTextBtn) dropdownTextBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+        if (dropdownContent) dropdownContent.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', (e) => { if (dropdownContainer && !dropdownContainer.contains(e.target)) closeMenu(); });
+        updateIcon();
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGallery();
+        bindSearchEvents();
+        bindDropdown();
+    });
+</script>
+</body>
+</html>
