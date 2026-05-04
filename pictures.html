@@ -22,7 +22,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('resource/home_background.png');
+            background-image: url('resource/pictures_background.png');
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover;
@@ -446,22 +446,9 @@
 </div>
 
 <script>
-    // ================= 从 pictures/ 目录读取图片 =================
-    // 注意：GitHub Pages 无法直接列出目录内容，需要配合一个 index.json 或使用 js 前端获取
-    // 方案：通过 fetch 获取 pictures/ 目录下的文件列表（需要服务端支持）
-    
-    // 由于 GitHub Pages 不支持目录列表 API，我们改用：
-    // 1. 手动在项目根目录生成 pictures/index.json 列出所有图片
-    // 2. 或者在前端定义一个已知图片列表
-    
-    // 为了方便，这里提供一个前端自动尝试获取并显示的方案
-    // 实际使用时可以配合 GitHub Actions 自动生成 pictures/index.json
-    
-    // 预先定义已知图片列表（可扩展，或从 pictures/index.json 加载）
-    // 如果没有 pictures/index.json，可以通过文件名推断
+    // ================= 从 pictures/index.json 读取图片列表 =================
     let pictureFiles = [];
-    
-    // 尝试从 pictures/index.json 加载
+
     async function loadPicturesFromJson() {
         try {
             const response = await fetch('pictures/index.json?t=' + Date.now());
@@ -472,72 +459,15 @@
                 }
             }
         } catch (e) {
-            console.log('未找到 pictures/index.json，将尝试自动扫描图片');
+            console.log('未找到 pictures/index.json');
         }
-        return null;
+        return [];
     }
-    
-    // 解析文件名中的日期（支持格式：YYYYMMDD_xxxx.png 或 YYYY-MM-DD_xxxx.png）
-    function parseDateFromFilename(filename) {
-        const patterns = [
-            /^(\d{4})(\d{2})(\d{2})/,
-            /^(\d{4})-(\d{2})-(\d{2})/,
-            /_(\d{4})(\d{2})(\d{2})/,
-            /_(\d{4})-(\d{2})-(\d{2})/
-        ];
-        for (const pattern of patterns) {
-            const match = filename.match(pattern);
-            if (match) {
-                return `${match[1]}-${match[2]}-${match[3]}`;
-            }
-        }
-        return null;
-    }
-    
-    // 获取图片的修改时间（通过 fetch HEAD 请求）
-    async function getImageDate(url) {
-        try {
-            const response = await fetch(url, { method: 'HEAD' });
-            const lastModified = response.headers.get('Last-Modified');
-            if (lastModified) {
-                return new Date(lastModified).toISOString().slice(0, 10);
-            }
-        } catch (e) {}
-        return null;
-    }
-    
-    // 主加载函数
+
     async function loadGallery() {
         const gridContainer = document.getElementById('galleryGrid');
         
-        // 优先从 index.json 加载
-        const jsonData = await loadPicturesFromJson();
-        
-        if (jsonData && jsonData.length > 0) {
-            // 使用 json 数据
-            pictureFiles = jsonData;
-        } else {
-            // 如果没有 json，尝试扫描常见命名格式的图片（需要手动指定范围）
-            // 这里提供一个示例列表，实际使用时可以根据站点内容配置
-            // 或者用户手动在 pictures/ 目录上传图片并维护 json
-            pictureFiles = [];
-            // 尝试检测一些常见图片
-            const testImages = [];
-            for (let i = 1; i <= 20; i++) {
-                testImages.push(`photo_${i}.png`);
-                testImages.push(`img_${i}.png`);
-                testImages.push(`pic_${i}.png`);
-            }
-            // 去重并过滤存在的
-            const existingImages = [];
-            for (const img of testImages) {
-                try {
-                    const res = await fetch(`pictures/${img}`, { method: 'HEAD' });
-                    if (res.ok) existingImages.push(img);
-                } catch(e) {}
-            }
-            pictureFiles = existingImages.map(name => ({ name, date: parseDateFromFilename(name) }));
-        }
+        pictureFiles = await loadPicturesFromJson();
         
         if (pictureFiles.length === 0) {
             gridContainer.innerHTML = `
@@ -550,19 +480,17 @@
             return;
         }
         
-        // 构建 HTML
         let html = '';
         for (const item of pictureFiles) {
-            const imageName = typeof item === 'string' ? item : item.name;
-            const imageDate = typeof item === 'string' ? parseDateFromFilename(item) : (item.date || parseDateFromFilename(item.name));
-            const displayDate = imageDate || '未知日期';
+            const imageName = item.name;
+            const imageDate = item.date || '未知日期';
             const imageUrl = `pictures/${imageName}`;
             
             html += `
                 <div class="gallery-card" onclick="showImageModal('${imageUrl.replace(/'/g, "\\'")}', '${escapeHtml(imageName)}')">
                     <img class="gallery-img" src="${imageUrl}" alt="${escapeHtml(imageName)}" loading="lazy" onerror="this.src='resource/blog_cover.png'">
                     <div class="gallery-info">
-                        <div class="gallery-date">📅 ${escapeHtml(displayDate)}</div>
+                        <div class="gallery-date">📅 ${escapeHtml(imageDate)}</div>
                         <div class="gallery-name">${escapeHtml(imageName)}</div>
                     </div>
                 </div>
@@ -571,7 +499,6 @@
         gridContainer.innerHTML = html;
     }
     
-    // 显示大图模态框
     window.showImageModal = function(imgUrl, imgName) {
         const modal = document.createElement('div');
         modal.className = 'modal-full';
@@ -587,7 +514,6 @@
         return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
     }
     
-    // 搜索跳转
     function performSearch() {
         const inputEl = document.getElementById('galleryKeywordInput');
         const keyword = inputEl ? inputEl.value.trim() : '';
@@ -612,7 +538,6 @@
         }
     }
     
-    // 下拉菜单绑定
     function bindDropdown() {
         const dropdownContainer = document.getElementById('projectDropdown');
         const dropdownContent = document.getElementById('dropdownContent');
@@ -662,7 +587,6 @@
         updateIcon();
     }
     
-    // 初始化
     document.addEventListener('DOMContentLoaded', () => {
         loadGallery();
         bindSearchEvents();
