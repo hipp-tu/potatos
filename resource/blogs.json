@@ -21,15 +21,5 @@
     "cover": "../resource/blog_cover.png",
     "body": "后台也是建立了起来，目前因为是静态托管，所以后台直接用GitHub的Token实现。\n有什么可以自定义一级域名的带后台的托管欢迎联系<a class=\"nav-link\" href=\"about.html\">邮箱</a>",
     "summary": "网站的完善 #1"
-  },
-  {
-    "type": "none",
-    "tags": [
-      "none"
-    ],
-    "title": "test",
-    "cover": "../resource/blog_cover.png",
-    "body": "none",
-    "summary": "none"
   }
 ]
