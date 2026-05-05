@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>映像拾遗 | Potatos. - 土匪potato的赛博实验室</title>
+    <title>映像拾遗 | Potatos. - 土匪potato的实验室</title>
     <link rel="icon" type="image/png" href="resource/logo.png">
     <style>
         * {
@@ -29,6 +29,7 @@
             background-color: #1a1a2e;
             z-index: 0;
         }
+        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -48,6 +49,7 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
         }
+        /* 顶栏 */
         .top-bar {
             position: fixed;
             top: 0;
@@ -102,6 +104,7 @@
             opacity: 0.7;
             text-decoration: underline;
         }
+        /* 搜索框样式 */
         .search-box {
             display: flex;
             align-items: center;
@@ -139,6 +142,7 @@
         .search-icon svg path {
             stroke: rgba(255, 255, 255, 0.8);
         }
+        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -216,6 +220,7 @@
             display: flex;
             align-items: center;
         }
+
         .gallery-section {
             position: relative;
             z-index: 1;
@@ -266,13 +271,22 @@
             border-color: rgba(255, 220, 120, 0.5);
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
         }
-        /* 预览图样式 */
+        /* 预览图样式 - 透明磨砂玻璃背景 */
         .gallery-img {
             width: 100%;
             height: 200px;
-            object-fit: cover;
+            object-fit: contain;  /* 改为 contain，确保透明图片完整显示 */
             display: block;
-            background: #1e1f2c;
+            /* 透明磨砂玻璃背景 */
+            background-color: rgba(255, 255, 255, 0.08);
+            background-image: 
+                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            backdrop-filter: blur(2px);
         }
         .gallery-info {
             padding: 16px;
@@ -295,47 +309,36 @@
             border-radius: 40px;
             color: #ddd;
         }
+
         @media (max-width: 800px) {
             .gallery-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            .brand-name {
-                font-size: 1.3rem;
-            }
-            .logo {
-                height: 38px;
-            }
-            .gallery-header h1 {
-                font-size: 2.2rem;
-            }
-            .top-bar {
-                padding: 0 16px;
-            }
-            .search-input {
-                width: 100px;
-            }
+            .brand-name { font-size: 1.3rem; }
+            .logo { height: 38px; }
+            .gallery-header h1 { font-size: 2.2rem; }
+            .top-bar { padding: 0 16px; }
+            .search-input { width: 100px; }
         }
         @media (max-width: 480px) {
-            .gallery-section {
-                padding: 90px 16px 40px;
-            }
-            .gallery-img {
-                height: 160px;
-            }
+            .gallery-section { padding: 90px 16px 40px; }
+            .gallery-img { height: 160px; }
         }
     </style>
 </head>
 <body>
 <div class="background-cover"></div>
 
-<!-- 顶栏 - 完全照抄主页 -->
+<!-- 顶栏 -->
 <div class="top-bar">
     <div class="left-section" onclick="location.href='index.html';">
         <img class="logo" src="resource/logo.png" alt="logo">
         <span class="brand-name">Potatos</span>
     </div>
     <div class="right-section">
+        <a class="nav-link" href="blogs.html" target="_self">博客记录</a>
+        <a class="nav-link" href="notice.html" target="_self">站务通知</a>
         <a class="nav-link" href="about.html" target="_self">关于本站</a>
         <div class="dropdown" id="projectDropdown">
             <div class="dropdown-control">
@@ -382,7 +385,7 @@
     (function() {
         const grid = document.getElementById('galleryGrid');
 
-        // 下拉菜单脚本（与主页一致）
+        // 下拉菜单脚本
         function bindDropdown() {
             const dropdownContainer = document.getElementById('projectDropdown');
             const dropdownContent = document.getElementById('dropdownContent');
@@ -434,7 +437,6 @@
 
         async function loadGallery() {
             try {
-                // 读取 pictures/index.json，格式: { "name": "xxx", "date": "xxx" }
                 const res = await fetch('pictures/index.json?t=' + Date.now());
                 if (!res.ok) throw new Error('index.json 不存在');
                 const list = await res.json();
@@ -447,7 +449,6 @@
                 let html = '';
                 for (let item of list) {
                     const imageName = item.name;
-                    // 图片 URL（自动补 .png）
                     const imageUrl = `pictures/${imageName}.png`;
                     const title = imageName;
                     const date = item.date || '未知日期';
@@ -478,7 +479,7 @@
             return String(str || '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
         }
 
-        // 搜索跳转（与主页逻辑一致）
+        // 搜索跳转
         function performSearch() {
             const inputEl = document.getElementById('galleryKeywordInput');
             const keyword = inputEl ? inputEl.value.trim() : '';
