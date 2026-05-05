@@ -271,22 +271,15 @@
             border-color: rgba(255, 220, 120, 0.5);
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
         }
-        /* 预览图样式 - 透明磨砂玻璃背景 */
+        /* 预览图样式 - 透明磨砂玻璃背景 (无格子) */
         .gallery-img {
             width: 100%;
             height: 200px;
-            object-fit: contain;  /* 改为 contain，确保透明图片完整显示 */
+            object-fit: contain;
             display: block;
-            /* 透明磨砂玻璃背景 */
-            background-color: rgba(255, 255, 255, 0.08);
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
-                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            backdrop-filter: blur(2px);
+            /* 透明毛玻璃效果，无网格图案 */
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
         }
         .gallery-info {
             padding: 16px;
