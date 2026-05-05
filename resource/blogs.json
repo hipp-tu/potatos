@@ -21,5 +21,38 @@
     "cover": "../resource/blog_cover.png",
     "body": "后台也是建立了起来，目前因为是静态托管，所以后台直接用GitHub的Token实现。\n有什么可以自定义一级域名的带后台的托管欢迎联系<a class=\"nav-link\" href=\"about.html\">邮箱</a>",
     "summary": "网站的完善 #1"
+  },
+  {
+    "type": "赛博日常",
+    "tags": [
+      "AI",
+      "GitHub"
+    ],
+    "title": "慢。。。",
+    "cover": "../resource/blog_cover.png",
+    "body": "GitHub真的太慢了，救命啊。。。不配加速器真的能等死\n网络huggingface&GitHub双核心布尔值真随机，你值得拥有",
+    "summary": "论GitHub的网速"
+  },
+  {
+    "type": "赛博日常",
+    "tags": [
+      "AI",
+      "GitHub"
+    ],
+    "title": "慢。。。",
+    "cover": "../resource/blog_cover.png",
+    "body": "GitHub真的太慢了，救命啊。。。不配加速器真的能等死\n网络huggingface&GitHub双核心布尔值真随机，你值得拥有",
+    "summary": "论GitHub的网速"
+  },
+  {
+    "type": "赛博日常",
+    "tags": [
+      "AI",
+      "GitHub"
+    ],
+    "title": "慢。。。",
+    "cover": "../resource/blog_cover.png",
+    "body": "GitHub真的太慢了，救命啊。。。不配加速器真的能等死\n网络huggingface&GitHub双核心布尔值真随机，你值得拥有",
+    "summary": "论GitHub的网速"
   }
 ]
