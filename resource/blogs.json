@@ -32,16 +32,5 @@
     "cover": "../resource/blog_cover.png",
     "body": "GitHub真的太慢了，救命啊。。。不配加速器真的能等死\n网络huggingface&GitHub双核心布尔值真随机，你值得拥有",
     "summary": "论GitHub的网速"
-  },
-  {
-    "type": "赛博日常",
-    "tags": [
-      "AI",
-      "GitHub"
-    ],
-    "title": "慢。。。",
-    "cover": "../resource/blog_cover.png",
-    "body": "GitHub真的太慢了，救命啊。。。不配加速器真的能等死\n网络huggingface&GitHub双核心布尔值真随机，你值得拥有",
-    "summary": "论GitHub的网速"
   }
 ]
