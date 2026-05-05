@@ -29,7 +29,6 @@
             background-color: #1a1a2e;
             z-index: 0;
         }
-        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -49,7 +48,6 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.6) rgba(255, 255, 255, 0.1);
         }
-        /* 顶栏 */
         .top-bar {
             position: fixed;
             top: 0;
@@ -104,7 +102,6 @@
             opacity: 0.7;
             text-decoration: underline;
         }
-        /* 搜索框样式 */
         .search-box {
             display: flex;
             align-items: center;
@@ -142,7 +139,6 @@
         .search-icon svg path {
             stroke: rgba(255, 255, 255, 0.8);
         }
-        /* 下拉菜单 */
         .dropdown {
             position: relative;
             display: inline-flex;
@@ -271,15 +267,14 @@
             border-color: rgba(255, 220, 120, 0.5);
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
         }
-        /* 预览图样式 - 透明磨砂玻璃背景 (无格子) */
+        /* ✅ 修正：完全透明背景 + 轻微磨砂 */
         .gallery-img {
             width: 100%;
             height: 200px;
             object-fit: contain;
             display: block;
-            /* 透明毛玻璃效果，无网格图案 */
-            background-color: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(8px);
+            background: transparent;        
+            backdrop-filter: blur(4px);     
         }
         .gallery-info {
             padding: 16px;
@@ -304,10 +299,7 @@
         }
 
         @media (max-width: 800px) {
-            .gallery-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
+            .gallery-grid { grid-template-columns: 1fr; gap: 20px; }
             .brand-name { font-size: 1.3rem; }
             .logo { height: 38px; }
             .gallery-header h1 { font-size: 2.2rem; }
@@ -323,7 +315,6 @@
 <body>
 <div class="background-cover"></div>
 
-<!-- 顶栏 -->
 <div class="top-bar">
     <div class="left-section" onclick="location.href='index.html';">
         <img class="logo" src="resource/logo.png" alt="logo">
@@ -378,7 +369,6 @@
     (function() {
         const grid = document.getElementById('galleryGrid');
 
-        // 下拉菜单脚本
         function bindDropdown() {
             const dropdownContainer = document.getElementById('projectDropdown');
             const dropdownContent = document.getElementById('dropdownContent');
@@ -472,7 +462,6 @@
             return String(str || '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
         }
 
-        // 搜索跳转
         function performSearch() {
             const inputEl = document.getElementById('galleryKeywordInput');
             const keyword = inputEl ? inputEl.value.trim() : '';
