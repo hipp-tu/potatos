@@ -296,8 +296,8 @@
     // ========== 全局数据 ==========
     let blogsData = [];
     let noticesData = [];
-    let pagesData = [];      // 从 pages.json 加载
-    let picturesData = [];   // 从 pictures/index.json 加载
+    let pagesData = [];
+    let picturesData = [];
     let isLoading = false;
 
     // ========== 加载 blogs.json ==========
@@ -417,7 +417,7 @@
 
         const results = [];
 
-        // 1. 搜索博客 (blogs.json)
+        // 1. 搜索博客
         for (const item of blogsData) {
             let relevance = 0;
             const typeLow = (item.type || "").toLowerCase();
@@ -449,7 +449,7 @@
             }
         }
 
-        // 2. 搜索通知 (notices.json)
+        // 2. 搜索通知
         for (const item of noticesData) {
             let relevance = 0;
             const titleLow = (item.title || "").toLowerCase();
@@ -477,7 +477,7 @@
             }
         }
 
-        // 3. 搜索页面 (pages.json)
+        // 3. 搜索页面
         for (const item of pagesData) {
             let relevance = 0;
             const titleLow = (item.name || "").toLowerCase();
@@ -503,7 +503,7 @@
             }
         }
 
-        // 4. 搜索图片 (pictures/index.json)
+        // 4. 搜索图片
         for (const item of picturesData) {
             let relevance = 0;
             const nameLow = (item.name || "").toLowerCase();
@@ -537,16 +537,42 @@
         return results;
     }
 
-    // ========== 显示详情模态框 ==========
+    // ========== 显示详情（图片内嵌模态框） ==========
     function showDetail(result) {
+        // 图片类型：在模态框内显示图片
+        if (result.dataType === 'picture') {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'max-width:90%; max-height:90%; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center;';
+            
+            const img = document.createElement('img');
+            img.src = result.link;
+            img.style.cssText = 'max-width:100%; max-height:85vh; object-fit:contain; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+            img.alt = result.title;
+            
+            const caption = document.createElement('div');
+            caption.style.cssText = 'margin-top:16px; color:#FFE6B0; font-size:0.9rem; text-align:center;';
+            caption.innerHTML = `📷 ${escapeHtml(result.title)}<br>📅 ${result.rawData?.date || '未知日期'}`;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '✕';
+            closeBtn.style.cssText = 'position:absolute; top:20px; right:30px; background:rgba(255,255,255,0.2); border:none; font-size:1.8rem; cursor:pointer; color:#fff; border-radius:50%; width:50px; height:50px;';
+            closeBtn.onclick = () => modal.remove();
+            
+            card.appendChild(img);
+            card.appendChild(caption);
+            modal.appendChild(card);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            return;
+        }
+        
+        // 静态页面：直接跳转
         if (result.link && result.link !== "#") {
-            if (result.dataType === 'picture') {
-                // 图片：新窗口打开原图
-                window.open(result.link, '_blank');
-            } else {
-                // 静态页面：直接跳转
-                window.location.href = result.link;
-            }
+            window.location.href = result.link;
             return;
         }
         
