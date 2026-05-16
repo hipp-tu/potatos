@@ -267,14 +267,9 @@
             border-color: rgba(255, 220, 120, 0.5);
             box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
         }
-        /* 预览图样式 - 透明磨砂玻璃背景 */
-        .gallery-img {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            display: block;
-            background: transparent;
-            backdrop-filter: blur(4px);
+        .card-line {
+            height: 8px;
+            background: linear-gradient(90deg, #FFD966, #F4B942, #FFD966);
         }
         .gallery-info {
             padding: 16px;
@@ -297,7 +292,6 @@
             border-radius: 40px;
             color: #ddd;
         }
-
         @media (max-width: 800px) {
             .gallery-grid { grid-template-columns: 1fr; gap: 20px; }
             .brand-name { font-size: 1.3rem; }
@@ -308,7 +302,6 @@
         }
         @media (max-width: 480px) {
             .gallery-section { padding: 90px 16px 40px; }
-            .gallery-img { height: 160px; }
         }
     </style>
 </head>
@@ -321,6 +314,8 @@
         <span class="brand-name">Potatos</span>
     </div>
     <div class="right-section">
+        <a class="nav-link" href="blogs.html" target="_self">博客记录</a>
+        <a class="nav-link" href="notice.html" target="_self">站务通知</a>
         <a class="nav-link" href="about.html" target="_self">关于本站</a>
         <div class="dropdown" id="projectDropdown">
             <div class="dropdown-control">
@@ -431,17 +426,12 @@
                 for (let item of list) {
                     const imageName = item.name;
                     const imageUrl = `pictures/${imageName}.png`;
-                    // 🔄 修改：优先使用 title 字段，没有则使用文件名
                     const displayTitle = item.title || imageName;
                     const date = item.date || '未知日期';
 
                     html += `
-                        <div class="gallery-card" onclick="window.open('${imageUrl.replace(/'/g, "\\'")}', '_blank')">
-                            <img class="gallery-img" 
-                                 src="${imageUrl}" 
-                                 loading="lazy" 
-                                 alt="${escapeHtml(displayTitle)}"
-                                 onerror="this.style.display='none'">
+                        <div class="gallery-card" onclick="showImageModal('${imageUrl.replace(/'/g, "\\'")}', '${escapeHtml(displayTitle)}', '${escapeHtml(date)}')">
+                            <div class="card-line"></div>
                             <div class="gallery-info">
                                 <div class="gallery-title">📷 ${escapeHtml(displayTitle)}</div>
                                 <div class="gallery-date">📅 ${escapeHtml(date)}</div>
@@ -457,8 +447,53 @@
             }
         }
 
+        window.showImageModal = function(imgUrl, title, date) {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'max-width:800px; width:90%; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:hidden; box-shadow:0 20px 35px rgba(0,0,0,0.5);';
+            
+            const imgContainer = document.createElement('div');
+            imgContainer.style.cssText = 'padding:24px 24px 0 24px; display:flex; justify-content:center; align-items:center; background:#0a0c12;';
+            
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.style.cssText = 'max-width:100%; max-height:65vh; object-fit:contain; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+            img.alt = title;
+            imgContainer.appendChild(img);
+            
+            const infoBar = document.createElement('div');
+            infoBar.style.cssText = 'padding:20px 28px 28px 28px; background:#1e1f2c;';
+            
+            const titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-size:1.2rem; font-weight:600; color:#F5E9CF; margin-bottom:8px; display:flex; align-items:center; gap:8px;';
+            titleEl.innerHTML = `📷 ${escapeHtml(title)}`;
+            
+            const dateEl = document.createElement('div');
+            dateEl.style.cssText = 'font-size:0.85rem; color:#FFE0A0; display:flex; align-items:center; gap:6px;';
+            dateEl.innerHTML = `📅 ${escapeHtml(date)}`;
+            
+            infoBar.appendChild(titleEl);
+            infoBar.appendChild(dateEl);
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '✕';
+            closeBtn.style.cssText = 'position:absolute; top:20px; right:30px; background:rgba(255,255,255,0.2); border:none; font-size:1.5rem; cursor:pointer; color:#fff; border-radius:40px; width:40px; height:40px; backdrop-filter:blur(4px);';
+            closeBtn.onclick = () => modal.remove();
+            
+            card.appendChild(imgContainer);
+            card.appendChild(infoBar);
+            modal.appendChild(card);
+            modal.appendChild(closeBtn);
+            document.body.appendChild(modal);
+            
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        };
+
         function escapeHtml(str) {
-            return String(str || '').replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
         }
 
         function performSearch() {
