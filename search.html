@@ -191,9 +191,22 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             cursor: pointer;
             transition: background 0.15s;
+            display: flex;
+            gap: 16px;
         }
         .result-item:hover {
             background: rgba(255, 255, 255, 0.1);
+        }
+        .result-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: #1e1f2c;
+            flex-shrink: 0;
+        }
+        .result-content {
+            flex: 1;
         }
         .result-type {
             display: inline-block;
@@ -258,6 +271,8 @@
             .search-input { font-size: 1rem; }
             .search-form { padding: 6px 8px 6px 18px; }
             .logo-img { height: 45px; }
+            .result-item { flex-direction: column; }
+            .result-thumb { width: 100%; height: 120px; }
         }
     </style>
 </head>
@@ -298,7 +313,6 @@
     let noticesData = [];
     let pagesData = [];
     let picturesData = [];
-    let isLoading = false;
 
     // ========== 加载 blogs.json ==========
     async function loadBlogs() {
@@ -366,13 +380,11 @@
 
     // ========== 加载所有数据源 ==========
     async function loadAllData() {
-        isLoading = true;
         const statusDiv = document.getElementById('statusArea');
         statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载数据源...';
         
         await Promise.all([loadBlogs(), loadNotices(), loadPages(), loadPictures()]);
         
-        isLoading = false;
         statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇博客 + ${noticesData.length} 条通知 + ${pagesData.length} 个页面 + ${picturesData.length} 张图片`;
         setTimeout(() => {
             if (statusDiv) statusDiv.style.display = 'none';
@@ -444,7 +456,8 @@
                     relevance: relevance,
                     tags: item.tags || [],
                     dataType: "blog",
-                    rawData: item
+                    rawData: item,
+                    thumbnail: null
                 });
             }
         }
@@ -472,7 +485,8 @@
                     relevance: relevance,
                     tags: [],
                     dataType: "notice",
-                    rawData: item
+                    rawData: item,
+                    thumbnail: null
                 });
             }
         }
@@ -498,7 +512,8 @@
                     relevance: relevance,
                     tags: [],
                     dataType: "page",
-                    rawData: item
+                    rawData: item,
+                    thumbnail: null
                 });
             }
         }
@@ -524,11 +539,12 @@
                     title: displayTitle,
                     link: imageUrl,
                     content: `文件名: ${item.name}\n日期: ${item.date || '未知'}`,
-                    summary: `📅 ${item.date || '未知日期'} · 点击查看原图`,
+                    summary: `📅 ${item.date || '未知日期'}`,
                     relevance: relevance,
                     tags: [],
                     dataType: "picture",
-                    rawData: item
+                    rawData: item,
+                    thumbnail: imageUrl
                 });
             }
         }
@@ -537,32 +553,46 @@
         return results;
     }
 
-    // ========== 显示详情（图片内嵌模态框） ==========
+    // ========== 显示详情 ==========
     function showDetail(result) {
-        // 图片类型：在模态框内显示图片
+        // 图片类型：弹窗看大图
         if (result.dataType === 'picture') {
             const modal = document.createElement('div');
             modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
             
             const card = document.createElement('div');
-            card.style.cssText = 'max-width:90%; max-height:90%; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center;';
+            card.style.cssText = 'max-width:800px; width:90%; background:#1e1f2c; border-radius:32px; border:1px solid rgba(255,255,200,0.3); overflow:hidden; box-shadow:0 20px 35px rgba(0,0,0,0.5);';
+            
+            const imgContainer = document.createElement('div');
+            imgContainer.style.cssText = 'padding:24px 24px 0 24px; display:flex; justify-content:center; align-items:center; background:#0a0c12;';
             
             const img = document.createElement('img');
             img.src = result.link;
-            img.style.cssText = 'max-width:100%; max-height:85vh; object-fit:contain; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+            img.style.cssText = 'max-width:100%; max-height:65vh; object-fit:contain; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.3);';
             img.alt = result.title;
+            imgContainer.appendChild(img);
             
-            const caption = document.createElement('div');
-            caption.style.cssText = 'margin-top:16px; color:#FFE6B0; font-size:0.9rem; text-align:center;';
-            caption.innerHTML = `📷 ${escapeHtml(result.title)}<br>📅 ${result.rawData?.date || '未知日期'}`;
+            const infoBar = document.createElement('div');
+            infoBar.style.cssText = 'padding:20px 28px 28px 28px; background:#1e1f2c;';
+            
+            const titleEl = document.createElement('div');
+            titleEl.style.cssText = 'font-size:1.2rem; font-weight:600; color:#F5E9CF; margin-bottom:8px; display:flex; align-items:center; gap:8px;';
+            titleEl.innerHTML = `📷 ${escapeHtml(result.title)}`;
+            
+            const dateEl = document.createElement('div');
+            dateEl.style.cssText = 'font-size:0.85rem; color:#FFE0A0; display:flex; align-items:center; gap:6px;';
+            dateEl.innerHTML = `📅 ${escapeHtml(result.rawData?.date || '未知日期')}`;
+            
+            infoBar.appendChild(titleEl);
+            infoBar.appendChild(dateEl);
             
             const closeBtn = document.createElement('button');
             closeBtn.innerHTML = '✕';
-            closeBtn.style.cssText = 'position:absolute; top:20px; right:30px; background:rgba(255,255,255,0.2); border:none; font-size:1.8rem; cursor:pointer; color:#fff; border-radius:50%; width:50px; height:50px;';
+            closeBtn.style.cssText = 'position:absolute; top:20px; right:30px; background:rgba(255,255,255,0.2); border:none; font-size:1.5rem; cursor:pointer; color:#fff; border-radius:40px; width:40px; height:40px; backdrop-filter:blur(4px);';
             closeBtn.onclick = () => modal.remove();
             
-            card.appendChild(img);
-            card.appendChild(caption);
+            card.appendChild(imgContainer);
+            card.appendChild(infoBar);
             modal.appendChild(card);
             modal.appendChild(closeBtn);
             document.body.appendChild(modal);
@@ -570,13 +600,13 @@
             return;
         }
         
-        // 静态页面：直接跳转
+        // 静态页面直接跳转
         if (result.link && result.link !== "#") {
             window.location.href = result.link;
             return;
         }
         
-        // 博客或通知的模态框显示
+        // 博客或通知的模态框
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
         
@@ -645,13 +675,20 @@
         let html = '';
         for (let i = 0; i < results.length; i++) {
             const item = results[i];
-            const previewText = item.summary || stripHtml(item.content || '').substring(0, 120);
+            const previewText = item.summary || stripHtml(item.content || '').substring(0, 100);
+            
+            // 图片类型显示缩略图
+            const thumbnailHtml = item.thumbnail ? `<img class="result-thumb" src="${item.thumbnail}" loading="lazy" onerror="this.style.display='none'">` : '';
+            
             html += `
                 <div class="result-item" data-index="${i}">
-                    <div class="result-type">${item.type}</div>
-                    <div class="result-title">${highlightText(item.title, keyword)}</div>
-                    ${item.tags && item.tags.length ? `<div class="result-tags">${item.tags.map(tag => `<span class="tag">${highlightText(tag, keyword)}</span>`).join('')}</div>` : ''}
-                    <div class="result-preview">${highlightText(previewText, keyword)}${previewText.length >= 120 ? '...' : ''}</div>
+                    ${thumbnailHtml}
+                    <div class="result-content">
+                        <div class="result-type">${item.type}</div>
+                        <div class="result-title">${highlightText(item.title, keyword)}</div>
+                        ${item.tags && item.tags.length ? `<div class="result-tags">${item.tags.map(tag => `<span class="tag">${highlightText(tag, keyword)}</span>`).join('')}</div>` : ''}
+                        <div class="result-preview">${highlightText(previewText, keyword)}${previewText.length >= 100 ? '...' : ''}</div>
+                    </div>
                 </div>
             `;
         }
@@ -668,7 +705,7 @@
         });
     }
 
-    // ========== 执行搜索 + URL 更新 ==========
+    // ========== 执行搜索 ==========
     async function performSearch() {
         const input = document.getElementById('searchInput');
         const keyword = input ? input.value.trim() : '';
