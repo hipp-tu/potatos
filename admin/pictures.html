@@ -26,6 +26,7 @@
             background-repeat: no-repeat;
             background-position: center center;
             background-size: cover;
+            background-color: #1a1a2e;
             z-index: 0;
         }
         ::-webkit-scrollbar {
@@ -192,7 +193,7 @@
             color: #F5E9CF;
             margin-bottom: 4px;
         }
-        .item-date {
+        .item-meta {
             font-size: 0.7rem;
             color: #aaa;
         }
@@ -228,15 +229,6 @@
             text-decoration: none;
             margin-left: 16px;
             font-size: 0.8rem;
-        }
-        .inline-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .inline-group input {
-            flex: 1;
-            margin-bottom: 0;
         }
         @media (max-width: 760px) {
             .admin-section { padding: 90px 16px 40px; }
@@ -279,11 +271,12 @@
                     <h3>➕ 添加图片记录</h3>
                 </div>
                 <div class="card-body">
-                    <input type="text" id="imageName" placeholder="图片文件名 (如: 20250101_sunset.png)">
+                    <input type="text" id="imageName" placeholder="文件名 (如: sunset) *">
+                    <input type="text" id="imageTitle" placeholder="显示标题（留空则显示文件名）">
                     <input type="date" id="imageDate" placeholder="日期">
                     <button id="addImageBtn">📷 添加图片</button>
                     <p style="color:#aaa; font-size:0.75rem; margin-top:12px;">
-                        ⚠️ 请先将图片文件上传到 <code>pictures/</code> 目录（通过 GitHub 或 git push）
+                        ⚠️ 请先将图片文件（PNG格式）上传到 <code>pictures/</code> 目录
                     </p>
                 </div>
             </div>
@@ -416,14 +409,15 @@
             }
             let html = '';
             imagesData.forEach((item, idx) => {
+                const displayTitle = item.title || item.name;
                 html += `
                     <div class="list-item">
                         <div class="item-info">
-                            <div class="item-name">📷 ${escapeHtml(item.name)}</div>
-                            <div class="item-date">📅 ${escapeHtml(item.date || '未知日期')}</div>
+                            <div class="item-name">📷 ${escapeHtml(displayTitle)}</div>
+                            <div class="item-meta">📅 ${escapeHtml(item.date || '未知日期')} · 文件名: ${escapeHtml(item.name)}.png</div>
                         </div>
                         <div class="item-actions">
-                            <a href="../pictures/${escapeHtml(item.name)}" target="_blank" class="preview-link">预览</a>
+                            <a href="../pictures/${escapeHtml(item.name)}.png" target="_blank" class="preview-link">预览</a>
                             <button class="danger delete-btn" data-index="${idx}">删除</button>
                         </div>
                     </div>
@@ -435,7 +429,7 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const idx = parseInt(btn.dataset.index);
-                    if (confirm(`删除图片记录「${imagesData[idx].name}」？\n注意：只删除记录，不删除实际文件`)) {
+                    if (confirm(`删除图片记录「${imagesData[idx].title || imagesData[idx].name}」？\n注意：只删除记录，不删除实际文件`)) {
                         imagesData.splice(idx, 1);
                         if (await saveData()) {
                             renderList();
@@ -448,23 +442,25 @@
 
         async function addImage() {
             const name = document.getElementById('imageName').value.trim();
+            const title = document.getElementById('imageTitle').value.trim();
             const date = document.getElementById('imageDate').value;
             if (!name) {
                 showMessage('请输入图片文件名', true);
                 return;
             }
-            // 检查是否已存在
             if (imagesData.some(img => img.name === name)) {
                 showMessage('该图片已存在', true);
                 return;
             }
             imagesData.push({
                 name: name,
+                title: title || null,
                 date: date || null
             });
             if (await saveData()) {
                 showMessage('添加成功');
                 document.getElementById('imageName').value = '';
+                document.getElementById('imageTitle').value = '';
                 document.getElementById('imageDate').value = '';
                 renderList();
             } else {
