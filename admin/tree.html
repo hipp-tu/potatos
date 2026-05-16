@@ -433,38 +433,37 @@
         }
 
         // 递归获取文件树
-        async function getFullTree(path = '') {
-            const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`;
-            const items = await fetchGitHubAPI(url);
-            const tree = [];
-            for (const item of items) {
-                const node = {
-                    name: item.name,
-                    path: item.path,
-                    type: item.type,
-                    size: item.size,
-                    html_url: item.html_url
-                };
-                if (item.type === 'dir') {
+async function getFullTree(path = '') {
+    const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`;
+    try {
+        const items = await fetchGitHubAPI(url);
+        const tree = [];
+        for (const item of items) {
+            const node = {
+                name: item.name,
+                path: item.path,
+                type: item.type,
+                size: item.size,
+                html_url: item.html_url
+            };
+            if (item.type === 'dir') {
+                try {
                     node.children = await getFullTree(item.path);
+                } catch (subErr) {
+                    console.warn(`无法加载子目录 ${item.path}:`, subErr);
+                    node.children = []; // 失败时设为空数组，不中断
                 }
-                tree.push(node);
+                // 避免请求过快触发限频
+                await new Promise(r => setTimeout(r, 200));
             }
-            return tree;
+            tree.push(node);
         }
-
-        async function loadFileTree() {
-            fileTreeDiv.innerHTML = '<div class="loading">📡 正在加载文件树...</div>';
-            try {
-                fileTreeData = await getFullTree('');
-                renderTree(fileTreeData);
-                showMessage('文件树加载成功');
-            } catch (err) {
-                console.error(err);
-                fileTreeDiv.innerHTML = `<div class="loading">❌ 加载失败: ${err.message}</div>`;
-                showMessage('加载失败', true);
-            }
-        }
+        return tree;
+    } catch (err) {
+        console.error(`加载目录失败 ${path}:`, err);
+        throw err;
+    }
+}
 
         function renderTree(items, level = 0) {
             if (!items || !items.length) return '';
