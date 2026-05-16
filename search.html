@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>搜索 | Potatos. - 土匪potato的赛博实验室</title>
+    <title>搜索 | Potatos. - 土匪potato的实验室</title>
     <link rel="icon" type="image/png" href="resource/logo.png">
     <style>
         * {
@@ -20,7 +20,6 @@
             justify-content: center;
             position: relative;
         }
-        /* 白色透明滚动条 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -277,7 +276,7 @@
                     <path d="M15.5 15.5L19 19M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="#E0E7FF" stroke-width="1.8" stroke-linecap="round"/>
                 </svg>
             </button>
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索博客、通知、页面..." autocomplete="off">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索博客、通知、页面、图片..." autocomplete="off">
             <div class="search-actions">
                 <button id="clearSearchBtn" class="clear-btn">✕</button>
                 <button id="submitSearchBtn" class="search-submit">检索</button>
@@ -295,44 +294,11 @@
 
 <script>
     // ========== 全局数据 ==========
-    let blogsData = [];      // blogs.json 数据
-    let noticesData = [];    // notices.json 数据
-    let staticPages = [];    // 静态页面数据
+    let blogsData = [];
+    let noticesData = [];
+    let pagesData = [];      // 从 pages.json 加载
+    let picturesData = [];   // 从 pictures/index.json 加载
     let isLoading = false;
-    let loadedCount = 0;
-    let totalToLoad = 3;
-
-    // ========== 静态页面数据（硬编码可搜索内容） ==========
-    const STATIC_PAGES_CONFIG = [
-        {
-            type: "📄 页面",
-            title: "关于本站",
-            link: "about.html",
-            content: "土匪potato的赛博实验室 数字据点 C++项目 赛博日志 PotatoCPPApp 关于土匪potato 联系方式 13661521279@163.com GitHub hipp-tu",
-            summary: "了解赛博实验室的缘起、实验项目和土匪potato的故事。"
-        },
-        {
-            type: "📄 页面",
-            title: "站务通知",
-            link: "notice.html",
-            content: "站务通知 站点更新 功能发布 重要公告 Potatos站点上线 搜索功能 博客系统 界面优化",
-            summary: "查看站点更新、功能发布和重要公告。"
-        },
-        {
-            type: "📄 页面",
-            title: "博客记录",
-            link: "blogs.html",
-            content: "博客 赛博日志 技术文章 C++ Blender DeepSeek 教程 分享",
-            summary: "浏览所有博客文章，阅读技术分享和创作心得。"
-        },
-        {
-            type: "📄 页面",
-            title: "首页",
-            link: "index.html",
-            content: "Potatos 土匪potato 赛博实验室 主页 土豆",
-            summary: "返回 Potatos. 赛博实验室主页。"
-        }
-    ];
 
     // ========== 加载 blogs.json ==========
     async function loadBlogs() {
@@ -366,26 +332,48 @@
         }
     }
 
-    // ========== 加载静态页面 ==========
-    function loadStaticPages() {
-        staticPages = STATIC_PAGES_CONFIG;
-        console.log(`✅ 加载静态页面: ${staticPages.length} 条`);
+    // ========== 加载 pages.json ==========
+    async function loadPages() {
+        try {
+            const response = await fetch('pages.json?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                pagesData = data;
+                console.log(`✅ 加载 pages.json: ${pagesData.length} 条`);
+            }
+        } catch (err) {
+            console.warn('加载 pages.json 失败:', err);
+            pagesData = [];
+        }
+    }
+
+    // ========== 加载 pictures/index.json ==========
+    async function loadPictures() {
+        try {
+            const response = await fetch('pictures/index.json?t=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                picturesData = data;
+                console.log(`✅ 加载 pictures/index.json: ${picturesData.length} 条`);
+            }
+        } catch (err) {
+            console.warn('加载 pictures/index.json 失败:', err);
+            picturesData = [];
+        }
     }
 
     // ========== 加载所有数据源 ==========
     async function loadAllData() {
         isLoading = true;
-        loadedCount = 0;
         const statusDiv = document.getElementById('statusArea');
-        statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载数据源 (0/3)...';
+        statusDiv.innerHTML = '<span class="loading-spinner"></span> 正在加载数据源...';
         
-        // 并行加载
-        const promises = [loadBlogs(), loadNotices()];
-        await Promise.all(promises);
-        loadStaticPages();
+        await Promise.all([loadBlogs(), loadNotices(), loadPages(), loadPictures()]);
         
         isLoading = false;
-        statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇博客 + ${noticesData.length} 条通知 + ${staticPages.length} 个页面`;
+        statusDiv.innerHTML = `✅ 已加载 ${blogsData.length} 篇博客 + ${noticesData.length} 条通知 + ${pagesData.length} 个页面 + ${picturesData.length} 张图片`;
         setTimeout(() => {
             if (statusDiv) statusDiv.style.display = 'none';
         }, 2000);
@@ -489,27 +477,57 @@
             }
         }
 
-        // 3. 搜索静态页面
-        for (const item of staticPages) {
+        // 3. 搜索页面 (pages.json)
+        for (const item of pagesData) {
             let relevance = 0;
-            const titleLow = (item.title || "").toLowerCase();
-            const contentLow = (item.content || "").toLowerCase();
+            const titleLow = (item.name || "").toLowerCase();
+            const descLow = (item.desc || "").toLowerCase();
 
             for (const w of words) {
                 if (titleLow.includes(w)) relevance += 15;
-                if (contentLow.includes(w)) relevance += 10;
+                if (descLow.includes(w)) relevance += 10;
                 if (titleLow === w) relevance += 20;
             }
             if (relevance > 0) {
                 results.push({
-                    type: item.type,
-                    title: item.title,
-                    link: item.link,
-                    content: item.content,
-                    summary: item.summary,
+                    type: "📄 页面",
+                    title: item.name,
+                    link: item.url,
+                    content: item.desc || "",
+                    summary: item.desc || "",
                     relevance: relevance,
                     tags: [],
                     dataType: "page",
+                    rawData: item
+                });
+            }
+        }
+
+        // 4. 搜索图片 (pictures/index.json)
+        for (const item of picturesData) {
+            let relevance = 0;
+            const nameLow = (item.name || "").toLowerCase();
+            const titleLow = (item.title || item.name || "").toLowerCase();
+            const dateLow = (item.date || "").toLowerCase();
+
+            for (const w of words) {
+                if (titleLow.includes(w)) relevance += 15;
+                if (nameLow.includes(w)) relevance += 10;
+                if (dateLow.includes(w)) relevance += 5;
+                if (titleLow === w) relevance += 20;
+            }
+            if (relevance > 0) {
+                const displayTitle = item.title || item.name;
+                const imageUrl = `pictures/${item.name}.png`;
+                results.push({
+                    type: "🖼️ 图片",
+                    title: displayTitle,
+                    link: imageUrl,
+                    content: `文件名: ${item.name}\n日期: ${item.date || '未知'}`,
+                    summary: `📅 ${item.date || '未知日期'} · 点击查看原图`,
+                    relevance: relevance,
+                    tags: [],
+                    dataType: "picture",
                     rawData: item
                 });
             }
@@ -522,8 +540,13 @@
     // ========== 显示详情模态框 ==========
     function showDetail(result) {
         if (result.link && result.link !== "#") {
-            // 静态页面直接跳转
-            window.location.href = result.link;
+            if (result.dataType === 'picture') {
+                // 图片：新窗口打开原图
+                window.open(result.link, '_blank');
+            } else {
+                // 静态页面：直接跳转
+                window.location.href = result.link;
+            }
             return;
         }
         
@@ -581,14 +604,14 @@
         if (!resultsList) return;
         
         if (!keyword || keyword.trim() === "") {
-            resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索（可搜索博客、通知、页面）</div>';
+            resultsList.innerHTML = '<div class="no-result">🥔 输入关键词开始搜索（可搜索博客、通知、页面、图片）</div>';
             resultsArea.style.display = 'block';
             return;
         }
 
         const results = searchAll(keyword);
         if (results.length === 0) {
-            resultsList.innerHTML = `<div class="no-result">🥔 没有找到关于 “${escapeHtml(keyword)}” 的内容<br>试试：关于本站、PotatoCPPApp、Blender、搜索功能</div>`;
+            resultsList.innerHTML = `<div class="no-result">🥔 没有找到关于 “${escapeHtml(keyword)}” 的内容<br>试试：关于本站、PotatoCPPApp、Blender、落日余晖</div>`;
             resultsArea.style.display = 'block';
             return;
         }
